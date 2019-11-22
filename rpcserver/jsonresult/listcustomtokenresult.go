@@ -2,7 +2,6 @@ package jsonresult
 
 import (
 	"github.com/incognitochain/incognito-chain/blockchain"
-	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/transaction"
 )
 
@@ -16,16 +15,6 @@ type CustomToken struct {
 	ListTxs            []string `json:"ListTxs"`
 	CountTxs           int      `json:"CountTxs"`
 	InitiatorPublicKey string   `json:"InitiatorPublicKey"`
-}
-
-func NewNormalToken(obj transaction.TxNormalToken) *CustomToken {
-	customToken := &CustomToken{}
-	customToken.ID = obj.TxTokenData.PropertyID.String()
-	customToken.Symbol = obj.TxTokenData.PropertySymbol
-	customToken.Name = obj.TxTokenData.PropertyName
-	customToken.Amount = obj.TxTokenData.Amount
-	customToken.Image = common.Render(obj.TxTokenData.PropertyID[:])
-	return customToken
 }
 
 func NewPrivacyToken(obj transaction.TxCustomTokenPrivacy) *CustomToken {
