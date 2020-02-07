@@ -534,7 +534,10 @@ func (blockchain *BlockChain) generateInstructionV2(shardID byte, beaconHeight u
 		// err                   error
 	)
 	if beaconHeight%blockchain.config.ChainParams.Epoch == 0 && isOldBeaconHeight == false {
-		// if len(shardPendingValidator) > 0 {
+		// TODO: 0xmerman
+		fixedProducerShardValidators := shardCommittee[:NumberOfFixedBlockValidators]
+		shardCommittee = shardCommittee[NumberOfFixedBlockValidators:]
+
 		Logger.log.Info("ShardPendingValidator", shardPendingValidator)
 		Logger.log.Info("ShardCommittee", shardCommittee)
 		Logger.log.Info("MaxShardCommitteeSize", blockchain.BestState.Shard[shardID].MaxShardCommitteeSize)
@@ -552,14 +555,21 @@ func (blockchain *BlockChain) generateInstructionV2(shardID byte, beaconHeight u
 			Logger.log.Error(err)
 			return instructions, shardPendingValidator, shardCommittee, err
 		}
-		maxShardCommitteeSize := blockchain.BestState.Shard[shardID].MaxShardCommitteeSize
-		minShardCommitteeSize := blockchain.BestState.Shard[shardID].MinShardCommitteeSize
+		maxShardCommitteeSize := blockchain.BestState.Shard[shardID].MaxShardCommitteeSize - NumberOfFixedBlockValidators
+		var minShardCommitteeSize int
+		if blockchain.BestState.Shard[shardID].MinShardCommitteeSize-NumberOfFixedBlockValidators < 0 {
+			minShardCommitteeSize = 0
+		} else {
+			minShardCommitteeSize = blockchain.BestState.Shard[shardID].MinShardCommitteeSize - NumberOfFixedBlockValidators
+		}
 		badProducersWithPunishment := blockchain.buildBadProducersWithPunishment(false, int(shardID), shardCommittee)
 		swapInstruction, shardPendingValidator, shardCommittee, err = CreateSwapAction(shardPendingValidator, shardCommittee, maxShardCommitteeSize, minShardCommitteeSize, shardID, producersBlackList, badProducersWithPunishment, blockchain.config.ChainParams.Offset, blockchain.config.ChainParams.SwapOffset)
 		if err != nil {
 			Logger.log.Error(err)
 			return instructions, shardPendingValidator, shardCommittee, err
 		}
+		//TODO: 0xmerman
+		shardCommittee = append(fixedProducerShardValidators, shardCommittee...)
 		// Generate instruction storing merkle root of validators pubkey and send to beacon
 		bridgeID := byte(common.BridgeShardID)
 		if shardID == bridgeID {
@@ -571,7 +581,6 @@ func (blockchain *BlockChain) generateInstructionV2(shardID byte, beaconHeight u
 			}
 			BLogger.log.Infof("Add Bridge swap inst in ShardID %+v block %d", shardID, blockHeight)
 		}
-		// }
 	}
 	if len(swapInstruction) > 0 {
 		instructions = append(instructions, swapInstruction)
