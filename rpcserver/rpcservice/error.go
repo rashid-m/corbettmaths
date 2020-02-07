@@ -60,6 +60,7 @@ const (
 	RejectInvalidTxVersionError
 	RejectSanityTxLocktime
 	TxPoolRejectTxError
+	RejectInvalidFeeError
 )
 
 // Standard JSON-RPC 2.0 errors.
@@ -127,7 +128,7 @@ var ErrCodeMessage = map[int]struct {
 	RejectDuplicateTxInPoolError: {-6006, "Tx already exist in pool"},
 	RejectInvalidTxVersionError:  {-6007, "Reject tx by invalid version"},
 	RejectSanityTxLocktime:       {-6008, "Reject wrong tx by locktime"},
-
+	RejectInvalidFeeError:        {-6009, "Reject Invalid Fee Error"},
 	// decentralized bridge
 	NoSwapConfirmInst: {-7000, "No swap confirm instruction found in block"},
 

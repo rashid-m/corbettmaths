@@ -12,7 +12,7 @@ import (
 	"github.com/incognitochain/incognito-chain/blockchain"
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/common/base58"
-	"github.com/incognitochain/incognito-chain/database/lvdb"
+	"github.com/incognitochain/incognito-chain/dataaccessobject/rawdb"
 	"github.com/incognitochain/incognito-chain/metadata"
 	"github.com/incognitochain/incognito-chain/rpcserver/bean"
 	"github.com/incognitochain/incognito-chain/rpcserver/jsonresult"
@@ -108,7 +108,7 @@ func (httpServer *HttpServer) handleCreateRawTxWithPRVContribution(params interf
 		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, errNewParam)
 	}
 
-	tx, err1 := httpServer.txService.BuildRawTransaction(createRawTxParam, meta, *httpServer.config.Database)
+	tx, err1 := httpServer.txService.BuildRawTransaction(createRawTxParam, meta)
 	if err1 != nil {
 		Logger.log.Error(err1)
 		return nil, rpcservice.NewRPCError(rpcservice.UnexpectedError, err1)
@@ -179,7 +179,7 @@ func (httpServer *HttpServer) handleCreateRawTxWithPTokenContribution(params int
 		metadata.PDEContributionMeta,
 	)
 
-	customTokenTx, rpcErr := httpServer.txService.BuildRawPrivacyCustomTokenTransaction(params, meta, *httpServer.config.Database)
+	customTokenTx, rpcErr := httpServer.txService.BuildRawPrivacyCustomTokenTransaction(params, meta)
 	if rpcErr != nil {
 		Logger.log.Error(rpcErr)
 		return nil, rpcErr
@@ -263,7 +263,7 @@ func (httpServer *HttpServer) handleCreateRawTxWithPRVTradeReq(params interface{
 		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, errNewParam)
 	}
 
-	tx, err1 := httpServer.txService.BuildRawTransaction(createRawTxParam, meta, *httpServer.config.Database)
+	tx, err1 := httpServer.txService.BuildRawTransaction(createRawTxParam, meta)
 	if err1 != nil {
 		Logger.log.Error(err1)
 		return nil, rpcservice.NewRPCError(rpcservice.UnexpectedError, err1)
@@ -352,7 +352,7 @@ func (httpServer *HttpServer) handleCreateRawTxWithPTokenTradeReq(params interfa
 		metadata.PDETradeRequestMeta,
 	)
 
-	customTokenTx, rpcErr := httpServer.txService.BuildRawPrivacyCustomTokenTransaction(params, meta, *httpServer.config.Database)
+	customTokenTx, rpcErr := httpServer.txService.BuildRawPrivacyCustomTokenTransaction(params, meta)
 	if rpcErr != nil {
 		Logger.log.Error(rpcErr)
 		return nil, rpcErr
@@ -433,7 +433,7 @@ func (httpServer *HttpServer) handleCreateRawTxWithWithdrawalReq(params interfac
 		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, errNewParam)
 	}
 
-	tx, err1 := httpServer.txService.BuildRawTransaction(createRawTxParam, meta, *httpServer.config.Database)
+	tx, err1 := httpServer.txService.BuildRawTransaction(createRawTxParam, meta)
 	if err1 != nil {
 		Logger.log.Error(err1)
 		return nil, rpcservice.NewRPCError(rpcservice.UnexpectedError, err1)
@@ -487,10 +487,10 @@ func (httpServer *HttpServer) handleGetPDEState(params interface{}, closeChan <-
 		return nil, rpcservice.NewRPCError(rpcservice.GetPDEStateError, err)
 	}
 	type CurrentPDEState struct {
-		WaitingPDEContributions map[string]*lvdb.PDEContribution `json:"WaitingPDEContributions"`
-		PDEPoolPairs            map[string]*lvdb.PDEPoolForPair  `json:"PDEPoolPairs"`
-		PDEShares               map[string]uint64                `json:"PDEShares"`
-		BeaconTimeStamp         int64                            `json:"BeaconTimeStamp"`
+		WaitingPDEContributions map[string]*rawdb.PDEContribution `json:"WaitingPDEContributions"`
+		PDEPoolPairs            map[string]*rawdb.PDEPoolForPair  `json:"PDEPoolPairs"`
+		PDEShares               map[string]uint64                 `json:"PDEShares"`
+		BeaconTimeStamp         int64                             `json:"BeaconTimeStamp"`
 	}
 	result := CurrentPDEState{
 		BeaconTimeStamp:         beaconBlock.Header.Timestamp,
@@ -520,11 +520,15 @@ func (httpServer *HttpServer) handleConvertNativeTokenToPrivacyToken(params inte
 	if err != nil {
 		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, errors.New("Payload is invalid"))
 	}
+	beaconPdexStateDB, err := httpServer.config.BlockChain.GetBeaconFeatureStateDBByHeight(uint64(beaconHeight), httpServer.config.BlockChain.GetDatabase())
+	if err != nil {
+		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, err)
+	}
 	res, err := metadata.ConvertNativeTokenToPrivacyToken(
 		uint64(nativeTokenAmount),
 		tokenID,
 		int64(beaconHeight),
-		httpServer.config.BlockChain.GetDatabase(),
+		beaconPdexStateDB,
 	)
 	if err != nil {
 		return nil, rpcservice.NewRPCError(rpcservice.GetPDEStateError, err)
@@ -551,11 +555,15 @@ func (httpServer *HttpServer) handleConvertPrivacyTokenToNativeToken(params inte
 	if err != nil {
 		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, errors.New("Payload is invalid"))
 	}
+	beaconPdexStateDB, err := httpServer.config.BlockChain.GetBeaconFeatureStateDBByHeight(uint64(beaconHeight), httpServer.config.BlockChain.GetDatabase())
+	if err != nil {
+		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, err)
+	}
 	res, err := metadata.ConvertPrivacyTokenToNativeToken(
 		uint64(privacyTokenAmount),
 		tokenID,
 		int64(beaconHeight),
-		httpServer.config.BlockChain.GetDatabase(),
+		beaconPdexStateDB,
 	)
 	if err != nil {
 		return nil, rpcservice.NewRPCError(rpcservice.GetPDEStateError, err)
@@ -570,7 +578,7 @@ func (httpServer *HttpServer) handleGetPDEContributionStatus(params interface{},
 	if !ok {
 		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, errors.New("Payload is invalid"))
 	}
-	status, err := httpServer.databaseService.GetPDEStatus(lvdb.PDEContributionStatusPrefix, []byte(contributionPairID))
+	status, err := httpServer.databaseService.GetPDEStatus(rawdb.PDEContributionStatusPrefix, []byte(contributionPairID))
 	if err != nil {
 		return nil, rpcservice.NewRPCError(rpcservice.GetPDEStateError, err)
 	}
@@ -584,7 +592,7 @@ func (httpServer *HttpServer) handleGetPDEContributionStatusV2(params interface{
 	if !ok {
 		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, errors.New("Payload is invalid"))
 	}
-	contributionStatus, err := httpServer.databaseService.GetPDEContributionStatus(lvdb.PDEContributionStatusPrefix, []byte(contributionPairID))
+	contributionStatus, err := httpServer.databaseService.GetPDEContributionStatus(rawdb.PDEContributionStatusPrefix, []byte(contributionPairID))
 	if err != nil {
 		return nil, rpcservice.NewRPCError(rpcservice.GetPDEStateError, err)
 	}
@@ -602,7 +610,7 @@ func (httpServer *HttpServer) handleGetPDETradeStatus(params interface{}, closeC
 	if err != nil {
 		return nil, rpcservice.NewRPCError(rpcservice.GetPDEStateError, err)
 	}
-	status, err := httpServer.databaseService.GetPDEStatus(lvdb.PDETradeStatusPrefix, txIDHash[:])
+	status, err := httpServer.databaseService.GetPDEStatus(rawdb.PDETradeStatusPrefix, txIDHash[:])
 	if err != nil {
 		return nil, rpcservice.NewRPCError(rpcservice.GetPDEStateError, err)
 	}
@@ -620,7 +628,7 @@ func (httpServer *HttpServer) handleGetPDEWithdrawalStatus(params interface{}, c
 	if err != nil {
 		return nil, rpcservice.NewRPCError(rpcservice.GetPDEStateError, err)
 	}
-	status, err := httpServer.databaseService.GetPDEStatus(lvdb.PDEWithdrawalStatusPrefix, txIDHash[:])
+	status, err := httpServer.databaseService.GetPDEStatus(rawdb.PDEWithdrawalStatusPrefix, txIDHash[:])
 	if err != nil {
 		return nil, rpcservice.NewRPCError(rpcservice.GetPDEStateError, err)
 	}
@@ -829,9 +837,9 @@ func convertPrice(
 	toTokenIDStr string,
 	fromTokenIDStr string,
 	convertingAmt uint64,
-	pdePoolPairs map[string]*lvdb.PDEPoolForPair,
+	pdePoolPairs map[string]*rawdb.PDEPoolForPair,
 ) *ConvertedPrice {
-	poolPairKey := lvdb.BuildPDEPoolForPairKey(
+	poolPairKey := rawdb.BuildPDEPoolForPairKey(
 		latestBcHeight,
 		toTokenIDStr,
 		fromTokenIDStr,

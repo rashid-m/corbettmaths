@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/incognitochain/incognito-chain/common"
-	"github.com/incognitochain/incognito-chain/database/lvdb"
+	"github.com/incognitochain/incognito-chain/dataaccessobject/rawdb"
 	"github.com/incognitochain/incognito-chain/metadata"
 )
 
@@ -119,9 +119,9 @@ func buildMatchedNReturnedContributionInst(
 }
 
 func isRightRatio(
-	waitingContribution1 *lvdb.PDEContribution,
-	waitingContribution2 *lvdb.PDEContribution,
-	poolPair *lvdb.PDEPoolForPair,
+	waitingContribution1 *rawdb.PDEContribution,
+	waitingContribution2 *rawdb.PDEContribution,
+	poolPair *rawdb.PDEPoolForPair,
 ) bool {
 	if poolPair == nil {
 		return true
@@ -157,9 +157,9 @@ func isRightRatio(
 }
 
 func computeActualContributedAmounts(
-	waitingContribution1 *lvdb.PDEContribution,
-	waitingContribution2 *lvdb.PDEContribution,
-	poolPair *lvdb.PDEPoolForPair,
+	waitingContribution1 *rawdb.PDEContribution,
+	waitingContribution2 *rawdb.PDEContribution,
+	poolPair *rawdb.PDEPoolForPair,
 ) (uint64, uint64, uint64, uint64) {
 	if poolPair.Token1PoolValue == 0 || poolPair.Token2PoolValue == 0 {
 		return waitingContribution1.Amount, 0, waitingContribution2.Amount, 0
@@ -256,10 +256,10 @@ func (blockchain *BlockChain) buildInstructionsForPDEContribution(
 		return [][]string{}, nil
 	}
 	meta := pdeContributionAction.Meta
-	waitingContribPairKey := string(lvdb.BuildWaitingPDEContributionKey(beaconHeight, meta.PDEContributionPairID))
+	waitingContribPairKey := string(rawdb.BuildWaitingPDEContributionKey(beaconHeight, meta.PDEContributionPairID))
 	waitingContribution, found := currentPDEState.WaitingPDEContributions[waitingContribPairKey]
 	if !found || waitingContribution == nil {
-		currentPDEState.WaitingPDEContributions[waitingContribPairKey] = &lvdb.PDEContribution{
+		currentPDEState.WaitingPDEContributions[waitingContribPairKey] = &rawdb.PDEContribution{
 			ContributorAddressStr: meta.ContributorAddressStr,
 			TokenIDStr:            meta.TokenIDStr,
 			Amount:                meta.ContributedAmount,
@@ -301,9 +301,9 @@ func (blockchain *BlockChain) buildInstructionsForPDEContribution(
 	}
 	// contributed to 2 diff sides of a pair and its a first contribution of this pair
 	poolPairs := currentPDEState.PDEPoolPairs
-	poolPairKey := string(lvdb.BuildPDEPoolForPairKey(beaconHeight, waitingContribution.TokenIDStr, meta.TokenIDStr))
+	poolPairKey := string(rawdb.BuildPDEPoolForPairKey(beaconHeight, waitingContribution.TokenIDStr, meta.TokenIDStr))
 	poolPair, found := poolPairs[poolPairKey]
-	incomingWaitingContribution := &lvdb.PDEContribution{
+	incomingWaitingContribution := &rawdb.PDEContribution{
 		ContributorAddressStr: meta.ContributorAddressStr,
 		TokenIDStr:            meta.TokenIDStr,
 		Amount:                meta.ContributedAmount,
@@ -360,13 +360,13 @@ func (blockchain *BlockChain) buildInstructionsForPDEContribution(
 	}
 
 	delete(currentPDEState.WaitingPDEContributions, waitingContribPairKey)
-	actualWaitingContrib := &lvdb.PDEContribution{
+	actualWaitingContrib := &rawdb.PDEContribution{
 		ContributorAddressStr: waitingContribution.ContributorAddressStr,
 		TokenIDStr:            waitingContribution.TokenIDStr,
 		Amount:                actualWaitingContribAmt,
 		TxReqID:               waitingContribution.TxReqID,
 	}
-	actualIncomingWaitingContrib := &lvdb.PDEContribution{
+	actualIncomingWaitingContrib := &rawdb.PDEContribution{
 		ContributorAddressStr: meta.ContributorAddressStr,
 		TokenIDStr:            meta.TokenIDStr,
 		Amount:                actualIncomingWaitingContribAmt,
@@ -431,7 +431,7 @@ func (blockchain *BlockChain) buildInstructionsForPDETrade(
 		Logger.log.Errorf("ERROR: an error occured while unmarshaling pde trade instruction: %+v", err)
 		return [][]string{}, nil
 	}
-	pairKey := string(lvdb.BuildPDEPoolForPairKey(beaconHeight, pdeTradeReqAction.Meta.TokenIDToBuyStr, pdeTradeReqAction.Meta.TokenIDToSellStr))
+	pairKey := string(rawdb.BuildPDEPoolForPairKey(beaconHeight, pdeTradeReqAction.Meta.TokenIDToBuyStr, pdeTradeReqAction.Meta.TokenIDToSellStr))
 
 	pdePoolPair, found := currentPDEState.PDEPoolPairs[pairKey]
 	if !found || (pdePoolPair.Token1PoolValue == 0 || pdePoolPair.Token2PoolValue == 0) {
@@ -570,7 +570,7 @@ func deductPDEAmountsV2(
 	beaconHeight uint64,
 ) *DeductingAmountsByWithdrawal {
 	var deductingAmounts *DeductingAmountsByWithdrawal
-	pairKey := string(lvdb.BuildPDEPoolForPairKey(
+	pairKey := string(rawdb.BuildPDEPoolForPairKey(
 		beaconHeight,
 		wdMeta.WithdrawalToken1IDStr, wdMeta.WithdrawalToken2IDStr,
 	))
@@ -578,7 +578,7 @@ func deductPDEAmountsV2(
 	if !found || pdePoolPair == nil {
 		return deductingAmounts
 	}
-	shareForWithdrawerKey := string(lvdb.BuildPDESharesKeyV2(
+	shareForWithdrawerKey := string(rawdb.BuildPDESharesKeyV2(
 		beaconHeight,
 		wdMeta.WithdrawalToken1IDStr, wdMeta.WithdrawalToken2IDStr, wdMeta.WithdrawerAddressStr,
 	))
@@ -587,7 +587,7 @@ func deductPDEAmountsV2(
 		return deductingAmounts
 	}
 
-	totalSharesForPairPrefix := string(lvdb.BuildPDESharesKeyV2(
+	totalSharesForPairPrefix := string(rawdb.BuildPDESharesKeyV2(
 		beaconHeight,
 		wdMeta.WithdrawalToken1IDStr, wdMeta.WithdrawalToken2IDStr, "",
 	))

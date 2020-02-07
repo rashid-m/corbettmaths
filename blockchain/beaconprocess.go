@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/incognitochain/incognito-chain/dataaccessobject/statedb"
 	"reflect"
 	"sort"
 	"strconv"
@@ -11,13 +12,12 @@ import (
 	"time"
 
 	"github.com/incognitochain/incognito-chain/blockchain/btc"
-	"github.com/incognitochain/incognito-chain/database"
-
+	"github.com/incognitochain/incognito-chain/common"
+	"github.com/incognitochain/incognito-chain/dataaccessobject/rawdb"
+	"github.com/incognitochain/incognito-chain/incdb"
 	"github.com/incognitochain/incognito-chain/incognitokey"
 	"github.com/incognitochain/incognito-chain/pubsub"
 	"github.com/pkg/errors"
-
-	"github.com/incognitochain/incognito-chain/common"
 )
 
 /*
@@ -36,6 +36,9 @@ import (
 	- Error: invalid new block
 */
 func (blockchain *BlockChain) VerifyPreSignBeaconBlock(beaconBlock *BeaconBlock, isPreSign bool) error {
+	if DATABASE_VERSION == 2 {
+		return blockchain.VerifyPreSignBeaconBlockV2(beaconBlock, isPreSign)
+	}
 	blockchain.chainLock.Lock()
 	defer blockchain.chainLock.Unlock()
 	// Verify block only
@@ -68,6 +71,9 @@ func (blockchain *BlockChain) VerifyPreSignBeaconBlock(beaconBlock *BeaconBlock,
 }
 
 func (blockchain *BlockChain) InsertBeaconBlock(beaconBlock *BeaconBlock, isValidated bool) error {
+	if DATABASE_VERSION == 2 {
+		return blockchain.InsertBeaconBlockV2(beaconBlock, isValidated)
+	}
 	blockchain.chainLock.Lock()
 	defer blockchain.chainLock.Unlock()
 
@@ -93,7 +99,7 @@ func (blockchain *BlockChain) InsertBeaconBlock(beaconBlock *BeaconBlock, isVali
 	blockHash := beaconBlock.Header.Hash()
 	Logger.log.Infof("BEACON | Begin insert new Beacon Block height %+v with hash %+v", beaconBlock.Header.Height, blockHash)
 	Logger.log.Infof("BEACON | Check Beacon Block existence before insert block height %+v with hash %+v", beaconBlock.Header.Height, blockHash)
-	isExist, _ := blockchain.config.DataBase.HasBeaconBlock(beaconBlock.Header.Hash())
+	isExist, _ := rawdb.HasBeaconBlock(blockchain.GetDatabase(), beaconBlock.Header.Hash())
 	if isExist {
 		return NewBlockChainError(DuplicateShardBlockError, errors.New("This beaconBlock has been stored already"))
 	}
@@ -117,7 +123,7 @@ func (blockchain *BlockChain) InsertBeaconBlock(beaconBlock *BeaconBlock, isVali
 		Logger.log.Infof("BEACON | SKIP Verify Best State With Beacon Block, Beacon Block Height %+v with hash %+v", beaconBlock.Header.Height, blockHash)
 	}
 	// Backup beststate
-	err := blockchain.config.DataBase.CleanBackup(true, 0)
+	err := rawdb.CleanBackup(blockchain.GetDatabase(), true, 0)
 	if err != nil {
 		return NewBlockChainError(CleanBackUpError, err)
 	}
@@ -328,7 +334,7 @@ func (blockchain *BlockChain) verifyPreProcessingBeaconBlock(beaconBlock *Beacon
 	}
 	// Verify parent hash exist or not
 	previousBlockHash := beaconBlock.Header.PreviousBlockHash
-	parentBlockBytes, err := blockchain.config.DataBase.FetchBeaconBlock(previousBlockHash)
+	parentBlockBytes, err := rawdb.FetchBeaconBlock(blockchain.GetDatabase(), previousBlockHash)
 	if err != nil {
 		Logger.log.Criticalf("FORK BEACON DETECTED, New Beacon Block Height %+v, Hash %+v, Expected Previous Hash %+v, BUT Current Best State Height %+v and Hash %+v", beaconBlock.Header.Height, beaconBlock.Header.Hash(), beaconBlock.Header.PreviousBlockHash, blockchain.BestState.Beacon.BeaconHeight, blockchain.BestState.Beacon.BestBlockHash)
 		blockchain.Synker.SyncBlkBeacon(true, false, false, []common.Hash{previousBlockHash}, nil, 0, 0, "")
@@ -835,7 +841,7 @@ func (beaconBestState *BeaconBestState) updateBeaconBestState(beaconBlock *Beaco
 	return nil
 }
 
-func (beaconBestState *BeaconBestState) initBeaconBestState(genesisBeaconBlock *BeaconBlock) error {
+func (beaconBestState *BeaconBestState) initBeaconBestState(genesisBeaconBlock *BeaconBlock, db incdb.Database) error {
 	var (
 		newBeaconCandidate = []incognitokey.CommitteePublicKey{}
 		newShardCandidate  = []incognitokey.CommitteePublicKey{}
@@ -874,6 +880,26 @@ func (beaconBestState *BeaconBestState) initBeaconBestState(genesisBeaconBlock *
 	}
 	beaconBestState.Epoch = 1
 	beaconBestState.NumOfBlocksByProducers = make(map[string]uint64)
+	//statedb===========================START
+	var err error
+	dbAccessWarper := statedb.NewDatabaseAccessWarper(db)
+	beaconBestState.featureStateDB, err = statedb.NewWithPrefixTrie(common.EmptyRoot, dbAccessWarper)
+	if err != nil {
+		return err
+	}
+	beaconBestState.consensusStateDB, err = statedb.NewWithPrefixTrie(common.EmptyRoot, dbAccessWarper)
+	if err != nil {
+		return err
+	}
+	beaconBestState.rewardStateDB, err = statedb.NewWithPrefixTrie(common.EmptyRoot, dbAccessWarper)
+	if err != nil {
+		return err
+	}
+	beaconBestState.slashStateDB, err = statedb.NewWithPrefixTrie(common.EmptyRoot, dbAccessWarper)
+	if err != nil {
+		return err
+	}
+	//statedb===========================END
 	return nil
 }
 
@@ -1138,23 +1164,23 @@ func (blockchain *BlockChain) processStoreBeaconBlock(
 	blockHash := beaconBlock.Header.Hash()
 	for shardID, shardStates := range beaconBlock.Body.ShardState {
 		for _, shardState := range shardStates {
-			err := blockchain.config.DataBase.StoreAcceptedShardToBeacon(shardID, beaconBlock.Header.Height, shardState.Hash)
+			err := rawdb.StoreAcceptedShardToBeacon(blockchain.GetDatabase(), shardID, beaconBlock.Header.Height, shardState.Hash)
 			if err != nil {
 				return NewBlockChainError(StoreAcceptedShardToBeaconError, err)
 			}
 		}
 	}
 	Logger.log.Infof("BEACON | Store Committee in Beacon Block Height %+v ", beaconBlock.Header.Height)
-	if err := blockchain.config.DataBase.StoreShardCommitteeByHeight(beaconBlock.Header.Height, snapshotAllShardCommittees); err != nil {
+	if err := rawdb.StoreShardCommitteeByHeight(blockchain.GetDatabase(), beaconBlock.Header.Height, snapshotAllShardCommittees); err != nil {
 		return NewBlockChainError(StoreShardCommitteeByHeightError, err)
 	}
-	if err := blockchain.config.DataBase.StoreBeaconCommitteeByHeight(beaconBlock.Header.Height, snapshotBeaconCommittees); err != nil {
+	if err := rawdb.StoreBeaconCommitteeByHeight(blockchain.GetDatabase(), beaconBlock.Header.Height, snapshotBeaconCommittees); err != nil {
 		return NewBlockChainError(StoreBeaconCommitteeByHeightError, err)
 	}
-	if err := blockchain.config.DataBase.StoreRewardReceiverByHeight(beaconBlock.Header.Height, snapshotRewardReceivers); err != nil {
+	if err := rawdb.StoreRewardReceiverByHeight(blockchain.GetDatabase(), beaconBlock.Header.Height, snapshotRewardReceivers); err != nil {
 		return NewBlockChainError(StoreRewardReceiverByHeightError, err)
 	}
-	if err := blockchain.config.DataBase.StoreAutoStakingByHeight(beaconBlock.Header.Height, blockchain.BestState.Beacon.AutoStaking); err != nil {
+	if err := rawdb.StoreAutoStakingByHeight(blockchain.GetDatabase(), beaconBlock.Header.Height, blockchain.BestState.Beacon.AutoStaking); err != nil {
 		return NewBlockChainError(StoreAutoStakingByHeightError, err)
 	}
 	//================================Store cross shard state ==================================
@@ -1172,14 +1198,14 @@ func (blockchain *BlockChain) processStoreBeaconBlock(
 					}
 					lastHeight := lastCrossShardState[fromShard][toShard] // get last cross shard height from shardID  to crossShardShardID
 					waitHeight := shardBlock.Height
-					err := blockchain.config.DataBase.StoreCrossShardNextHeight(fromShard, toShard, lastHeight, waitHeight)
+					err := rawdb.StoreCrossShardNextHeight(blockchain.GetDatabase(), fromShard, toShard, lastHeight, waitHeight)
 					if err != nil {
 						GetBeaconBestState().lock.Unlock()
 						return NewBlockChainError(StoreCrossShardNextHeightError, err)
 					}
 					//beacon process shard_to_beacon in order so cross shard next height also will be saved in order
 					//dont care overwrite this value
-					err = blockchain.config.DataBase.StoreCrossShardNextHeight(fromShard, toShard, waitHeight, 0)
+					err = rawdb.StoreCrossShardNextHeight(blockchain.GetDatabase(), fromShard, toShard, waitHeight, 0)
 					if err != nil {
 						GetBeaconBestState().lock.Unlock()
 						return NewBlockChainError(StoreCrossShardNextHeightError, err)
@@ -1195,18 +1221,18 @@ func (blockchain *BlockChain) processStoreBeaconBlock(
 		GetBeaconBestState().lock.Unlock()
 	}
 	//=============================END Store cross shard state ==================================
-	if err := blockchain.config.DataBase.StoreBeaconBlockIndex(blockHash, beaconBlock.Header.Height); err != nil {
+	if err := rawdb.StoreBeaconBlockIndex(blockchain.GetDatabase(), blockHash, beaconBlock.Header.Height); err != nil {
 		return NewBlockChainError(StoreBeaconBlockIndexError, err)
 	}
 
-	batchPutData := []database.BatchData{}
+	batchPutData := []incdb.BatchData{}
 
 	Logger.log.Debugf("Store Beacon BestState Height %+v", beaconBlock.Header.Height)
 	if err := blockchain.StoreBeaconBestState(&batchPutData); err != nil {
 		return NewBlockChainError(StoreBeaconBestStateError, err)
 	}
 	Logger.log.Debugf("Store Beacon Block Height %+v with Hash %+v ", beaconBlock.Header.Height, blockHash)
-	if err := blockchain.config.DataBase.StoreBeaconBlock(beaconBlock, blockHash, &batchPutData); err != nil {
+	if err := rawdb.StoreBeaconBlock(blockchain.GetDatabase(), beaconBlock, blockHash, &batchPutData); err != nil {
 		return NewBlockChainError(StoreBeaconBlockError, err)
 	}
 
@@ -1226,5 +1252,5 @@ func (blockchain *BlockChain) processStoreBeaconBlock(
 		return NewBlockChainError(ProcessPDEInstructionError, err)
 	}
 
-	return blockchain.config.DataBase.PutBatch(batchPutData)
+	return blockchain.GetDatabase().PutBatch(batchPutData)
 }

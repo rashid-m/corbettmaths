@@ -10,7 +10,7 @@ import (
 
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/common/base58"
-	"github.com/incognitochain/incognito-chain/database/lvdb"
+	"github.com/incognitochain/incognito-chain/dataaccessobject/rawdb"
 	"github.com/incognitochain/incognito-chain/incognitokey"
 	"github.com/incognitochain/incognito-chain/metadata"
 	"github.com/incognitochain/incognito-chain/transaction"
@@ -18,7 +18,7 @@ import (
 )
 
 func (blockchain *BlockChain) ValidateBlockWithPrevShardBestState(block *ShardBlock) error {
-	prevBST, err := blockchain.config.DataBase.FetchPrevBestState(false, block.Header.ShardID)
+	prevBST, err := rawdb.FetchPrevBestState(blockchain.config.DataBase, false, block.Header.ShardID)
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (blockchain *BlockChain) ValidateBlockWithPrevShardBestState(block *ShardBl
 	// }
 	// Verify parent hash exist or not
 	prevBlockHash := block.Header.PreviousBlockHash
-	parentBlockData, err := blockchain.config.DataBase.FetchBlock(prevBlockHash)
+	parentBlockData, err := rawdb.FetchBlock(blockchain.config.DataBase, prevBlockHash)
 	if err != nil {
 		return NewBlockChainError(DatabaseError, err)
 	}
@@ -74,7 +74,7 @@ func (blockchain *BlockChain) RevertShardState(shardID byte) error {
 }
 
 func (blockchain *BlockChain) revertShardBestState(shardID byte) error {
-	prevBST, err := blockchain.config.DataBase.FetchPrevBestState(false, shardID)
+	prevBST, err := rawdb.FetchPrevBestState(blockchain.GetDatabase(), false, shardID)
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func (blockchain *BlockChain) revertShardState(shardID byte) error {
 	}
 
 	for _, tx := range currentBestState.BestBlock.Body.Transactions {
-		if err := blockchain.config.DataBase.DeleteTransactionIndex(*tx.Hash()); err != nil {
+		if err := rawdb.DeleteTransactionIndex(blockchain.GetDatabase(), *tx.Hash()); err != nil {
 			return NewBlockChainError(RevertStateError, err)
 		}
 	}
@@ -133,7 +133,7 @@ func (blockchain *BlockChain) revertShardState(shardID byte) error {
 	}
 
 	prevBeaconHeight := currentBestState.BeaconHeight
-	beaconBlocks, err := FetchBeaconBlockFromHeight(blockchain.config.DataBase, prevBeaconHeight+1, currentBestStateBlk.Header.BeaconHeight)
+	beaconBlocks, err := FetchBeaconBlockFromHeight(blockchain.GetDatabase(), prevBeaconHeight+1, currentBestStateBlk.Header.BeaconHeight)
 	if err != nil {
 		return NewBlockChainError(RevertStateError, err)
 	}
@@ -143,7 +143,7 @@ func (blockchain *BlockChain) revertShardState(shardID byte) error {
 	}
 
 	// DeleteIncomingCrossShard
-	blockchain.config.DataBase.DeleteBlock(currentBestStateBlk.Header.Hash(), currentBestStateBlk.Header.Height, shardID)
+	rawdb.DeleteBlock(blockchain.GetDatabase(), currentBestStateBlk.Header.Hash(), currentBestStateBlk.Header.Height, shardID)
 
 	if err := blockchain.StoreShardBestState(shardID, nil); err != nil {
 		return NewBlockChainError(RevertStateError, err)
@@ -163,7 +163,7 @@ func (blockchain *BlockChain) BackupCurrentShardState(block *ShardBlock, beaconb
 		return NewBlockChainError(UnmashallJsonShardBlockError, err)
 	}
 
-	if err := blockchain.config.DataBase.StorePrevBestState(tempMarshal, false, block.Header.ShardID); err != nil {
+	if err := rawdb.StorePrevBestState(blockchain.GetDatabase(), tempMarshal, false, block.Header.ShardID); err != nil {
 		return NewBlockChainError(UnExpectedError, err)
 	}
 
@@ -190,7 +190,6 @@ func (blockchain *BlockChain) backupDatabaseFromBeaconInstruction(
 	committee := make(map[byte][]incognitokey.CommitteePublicKey)
 	isInit := false
 	epoch := uint64(0)
-	db := blockchain.config.DataBase
 	for _, beaconBlock := range beaconBlocks {
 		for _, l := range beaconBlock.Body.Instructions {
 			if l[0] == StakeAction || l[0] == RandomAction || l[0] == SwapAction || l[0] == AssignAction || l[0] == StopAutoStake {
@@ -219,7 +218,7 @@ func (blockchain *BlockChain) backupDatabaseFromBeaconInstruction(
 						return err
 					}
 					for key := range beaconBlkRewardInfo.BeaconReward {
-						err = db.BackupCommitteeReward(publicKeyCommittee, key)
+						err = rawdb.BackupCommitteeReward(blockchain.GetDatabase(), publicKeyCommittee, key)
 						if err != nil {
 							return err
 						}
@@ -236,7 +235,7 @@ func (blockchain *BlockChain) backupDatabaseFromBeaconInstruction(
 						return err
 					}
 					for key := range incDAORewardInfo.IncDAOReward {
-						err = db.BackupCommitteeReward(keyWalletDevAccount.KeySet.PaymentAddress.Pk, key)
+						err = rawdb.BackupCommitteeReward(blockchain.GetDatabase(), keyWalletDevAccount.KeySet.PaymentAddress.Pk, key)
 						if err != nil {
 							return err
 						}
@@ -253,7 +252,7 @@ func (blockchain *BlockChain) backupDatabaseFromBeaconInstruction(
 				if (!isInit) || (epoch != shardRewardInfo.Epoch) {
 					isInit = true
 					epoch = shardRewardInfo.Epoch
-					rewardReceiverBytes, err := blockchain.config.DataBase.FetchRewardReceiverByHeight(epoch * blockchain.config.ChainParams.Epoch)
+					rewardReceiverBytes, err := rawdb.FetchRewardReceiverByHeight(blockchain.GetDatabase(), epoch*blockchain.config.ChainParams.Epoch)
 					if err != nil {
 						return err
 					}
@@ -261,7 +260,7 @@ func (blockchain *BlockChain) backupDatabaseFromBeaconInstruction(
 					if err != nil {
 						return err
 					}
-					committeeBytes, err := blockchain.config.DataBase.FetchShardCommitteeByHeight(epoch * blockchain.config.ChainParams.Epoch)
+					committeeBytes, err := rawdb.FetchShardCommitteeByHeight(blockchain.GetDatabase(), epoch*blockchain.config.ChainParams.Epoch)
 					if err != nil {
 						return err
 					}
@@ -286,7 +285,7 @@ func (blockchain *BlockChain) backupDatabaseFromBeaconInstruction(
 func (blockchain *BlockChain) createBackupFromTxViewPoint(block *ShardBlock) error {
 	// Fetch data from block into tx View point
 	view := NewTxViewPoint(block.Header.ShardID)
-	err := view.fetchTxViewPointFromBlock(blockchain.config.DataBase, block)
+	err := view.fetchTxViewPointFromBlock(blockchain.GetDatabase(), block)
 	if err != nil {
 		return err
 	}
@@ -323,7 +322,7 @@ func (blockchain *BlockChain) createBackupFromTxViewPoint(block *ShardBlock) err
 
 func (blockchain *BlockChain) createBackupFromCrossTxViewPoint(block *ShardBlock) error {
 	view := NewTxViewPoint(block.Header.ShardID)
-	err := view.fetchCrossTransactionViewPointFromBlock(blockchain.config.DataBase, block)
+	err := view.fetchCrossTransactionViewPointFromBlock(blockchain.GetDatabase(), block)
 
 	for _, privacyCustomTokenSubView := range view.privacyCustomTokenViewPoint {
 		err = blockchain.backupCommitmentsFromTxViewPoint(*privacyCustomTokenSubView)
@@ -340,7 +339,7 @@ func (blockchain *BlockChain) createBackupFromCrossTxViewPoint(block *ShardBlock
 }
 
 func (blockchain *BlockChain) backupSerialNumbersFromTxViewPoint(view TxViewPoint) error {
-	err := blockchain.config.DataBase.BackupSerialNumbersLen(*view.tokenID, view.shardID)
+	err := rawdb.BackupSerialNumbersLen(blockchain.GetDatabase(), *view.tokenID, view.shardID)
 	if err != nil {
 		return err
 	}
@@ -365,7 +364,7 @@ func (blockchain *BlockChain) backupCommitmentsFromTxViewPoint(view TxViewPoint)
 		lastByte := pubkeyBytes[len(pubkeyBytes)-1]
 		pubkeyShardID := common.GetShardIDFromLastByte(lastByte)
 		if pubkeyShardID == view.shardID {
-			err = blockchain.config.DataBase.BackupCommitmentsOfPubkey(*view.tokenID, view.shardID, pubkeyBytes)
+			err = rawdb.BackupCommitmentsOfPublicKey(blockchain.GetDatabase(), *view.tokenID, view.shardID, pubkeyBytes)
 			if err != nil {
 				return err
 			}
@@ -389,7 +388,7 @@ func (blockchain *BlockChain) backupCommitmentsFromTxViewPoint(view TxViewPoint)
 	// 	lastByte := pubkeyBytes[len(pubkeyBytes)-1]
 	// 	pubkeyShardID := common.GetShardIDFromLastByte(lastByte)
 	// 	if pubkeyShardID == view.shardID {
-	// 		err = blockchain.config.DataBase.BackupOutputCoin(*view.tokenID, pubkeyBytes, pubkeyShardID)
+	// 		err = rawdb.BackupOutputCoin(*view.tokenID, pubkeyBytes, pubkeyShardID)
 	// 		if err != nil {
 	// 			return err
 	// 		}
@@ -404,8 +403,7 @@ func (blockchain *BlockChain) restoreDatabaseFromBeaconInstruction(beaconBlocks 
 	shardCommittee := make(map[byte][]string)
 	isInit := false
 	epoch := uint64(0)
-	db := blockchain.config.DataBase
-	// listShardCommittee := blockchain.config.DataBase.FetchCommitteeByEpoch
+	// listShardCommittee := rawdb.FetchCommitteeByEpoch
 	for _, beaconBlock := range beaconBlocks {
 		for _, l := range beaconBlock.Body.Instructions {
 			if l[0] == StakeAction || l[0] == RandomAction {
@@ -434,7 +432,7 @@ func (blockchain *BlockChain) restoreDatabaseFromBeaconInstruction(beaconBlocks 
 						return err
 					}
 					for key := range beaconBlkRewardInfo.BeaconReward {
-						err = db.RestoreCommitteeReward(publicKeyCommittee, key)
+						err = rawdb.RestoreCommitteeReward(blockchain.GetDatabase(), publicKeyCommittee, key)
 						if err != nil {
 							return err
 						}
@@ -451,7 +449,7 @@ func (blockchain *BlockChain) restoreDatabaseFromBeaconInstruction(beaconBlocks 
 						return err
 					}
 					for key := range incDAORewardInfo.IncDAOReward {
-						err = db.RestoreCommitteeReward(keyWalletDevAccount.KeySet.PaymentAddress.Pk, key)
+						err = rawdb.RestoreCommitteeReward(blockchain.GetDatabase(), keyWalletDevAccount.KeySet.PaymentAddress.Pk, key)
 						if err != nil {
 							return err
 						}
@@ -466,7 +464,7 @@ func (blockchain *BlockChain) restoreDatabaseFromBeaconInstruction(beaconBlocks 
 					if (!isInit) || (epoch != shardRewardInfo.Epoch) {
 						isInit = true
 						epoch = shardRewardInfo.Epoch
-						temp, err := blockchain.config.DataBase.FetchShardCommitteeByHeight(epoch * blockchain.config.ChainParams.Epoch)
+						temp, err := rawdb.FetchShardCommitteeByHeight(blockchain.GetDatabase(), epoch*blockchain.config.ChainParams.Epoch)
 						if err != nil {
 							return err
 						}
@@ -496,7 +494,7 @@ func (blockchain *BlockChain) restoreShareRewardForShardCommittee(epoch uint64, 
 			if err != nil {
 				return err
 			}
-			err = blockchain.config.DataBase.RestoreCommitteeReward(committeeBytes, key)
+			err = rawdb.RestoreCommitteeReward(blockchain.GetDatabase(), committeeBytes, key)
 			if err != nil {
 				return err
 			}
@@ -508,7 +506,7 @@ func (blockchain *BlockChain) restoreShareRewardForShardCommittee(epoch uint64, 
 func (blockchain *BlockChain) restoreFromTxViewPoint(block *ShardBlock) error {
 	// Fetch data from block into tx View point
 	view := NewTxViewPoint(block.Header.ShardID)
-	err := view.fetchTxViewPointFromBlock(blockchain.config.DataBase, block)
+	err := view.fetchTxViewPointFromBlock(blockchain.GetDatabase(), block)
 	if err != nil {
 		return err
 	}
@@ -518,12 +516,12 @@ func (blockchain *BlockChain) restoreFromTxViewPoint(block *ShardBlock) error {
 		privacyCustomTokenTx := view.privacyCustomTokenTxs[indexTx]
 		// check is bridge token
 		isBridgeToken := false
-		allBridgeTokensBytes, err := blockchain.config.DataBase.GetAllBridgeTokens()
+		allBridgeTokensBytes, err := rawdb.GetAllBridgeTokens(blockchain.GetDatabase())
 		if err != nil {
 			return err
 		}
 		if len(allBridgeTokensBytes) > 0 {
-			var allBridgeTokens []*lvdb.BridgeTokenInfo
+			var allBridgeTokens []*rawdb.BridgeTokenInfo
 			err = json.Unmarshal(allBridgeTokensBytes, &allBridgeTokens)
 			for _, bridgeToken := range allBridgeTokens {
 				if bridgeToken.TokenID != nil && bytes.Equal(privacyCustomTokenTx.TxPrivacyTokenData.PropertyID[:], bridgeToken.TokenID[:]) {
@@ -535,14 +533,14 @@ func (blockchain *BlockChain) restoreFromTxViewPoint(block *ShardBlock) error {
 		case transaction.CustomTokenInit, transaction.CustomTokenCrossShard:
 			{
 				if !isBridgeToken && !privacyCustomTokenTx.TxPrivacyTokenData.Mintable {
-					err = blockchain.config.DataBase.DeletePrivacyToken(privacyCustomTokenTx.TxPrivacyTokenData.PropertyID)
+					err = rawdb.DeletePrivacyToken(blockchain.GetDatabase(), privacyCustomTokenTx.TxPrivacyTokenData.PropertyID)
 					if err != nil {
 						return err
 					}
 				}
 			}
 		}
-		err = blockchain.config.DataBase.DeletePrivacyTokenTx(privacyCustomTokenTx.TxPrivacyTokenData.PropertyID, indexTx, block.Header.ShardID, block.Header.Height)
+		err = rawdb.DeletePrivacyTokenTx(blockchain.GetDatabase(), privacyCustomTokenTx.TxPrivacyTokenData.PropertyID, indexTx, block.Header.ShardID, block.Header.Height)
 		if err != nil {
 			return err
 		}
@@ -573,11 +571,11 @@ func (blockchain *BlockChain) restoreFromTxViewPoint(block *ShardBlock) error {
 
 func (blockchain *BlockChain) restoreFromCrossTxViewPoint(block *ShardBlock) error {
 	view := NewTxViewPoint(block.Header.ShardID)
-	err := view.fetchCrossTransactionViewPointFromBlock(blockchain.config.DataBase, block)
+	err := view.fetchCrossTransactionViewPointFromBlock(blockchain.GetDatabase(), block)
 
 	for _, privacyCustomTokenSubView := range view.privacyCustomTokenViewPoint {
 		tokenID := privacyCustomTokenSubView.tokenID
-		if err := blockchain.config.DataBase.DeletePrivacyTokenCrossShard(*tokenID); err != nil {
+		if err := rawdb.DeletePrivacyTokenCrossShard(blockchain.GetDatabase(), *tokenID); err != nil {
 			return err
 		}
 		err = blockchain.restoreCommitmentsFromTxViewPoint(*privacyCustomTokenSubView, block.Header.ShardID)
@@ -594,7 +592,7 @@ func (blockchain *BlockChain) restoreFromCrossTxViewPoint(block *ShardBlock) err
 }
 
 func (blockchain *BlockChain) restoreSerialNumbersFromTxViewPoint(view TxViewPoint) error {
-	err := blockchain.config.DataBase.RestoreSerialNumber(*view.tokenID, view.shardID, view.listSerialNumbers)
+	err := rawdb.RestoreSerialNumber(blockchain.GetDatabase(), *view.tokenID, view.shardID, view.listSerialNumbers)
 	if err != nil {
 		return err
 	}
@@ -620,7 +618,7 @@ func (blockchain *BlockChain) restoreCommitmentsFromTxViewPoint(view TxViewPoint
 		lastByte := pubkeyBytes[len(pubkeyBytes)-1]
 		pubkeyShardID := common.GetShardIDFromLastByte(lastByte)
 		if pubkeyShardID == view.shardID {
-			err = blockchain.config.DataBase.RestoreCommitmentsOfPubkey(*view.tokenID, view.shardID, pubkeyBytes, item1)
+			err = rawdb.RestoreCommitmentsOfPubkey(blockchain.GetDatabase(), *view.tokenID, view.shardID, pubkeyBytes, item1)
 			if err != nil {
 				return err
 			}
@@ -642,7 +640,7 @@ func (blockchain *BlockChain) restoreCommitmentsFromTxViewPoint(view TxViewPoint
 			for _, outputCoin := range outputCoinArray {
 				outputCoinBytesArray = append(outputCoinBytesArray, outputCoin.Bytes())
 			}
-			err = blockchain.config.DataBase.DeleteOutputCoin(*view.tokenID, publicKeyBytes, outputCoinBytesArray, publicKeyShardID)
+			err = rawdb.DeleteOutputCoin(blockchain.GetDatabase(), *view.tokenID, publicKeyBytes, outputCoinBytesArray, publicKeyShardID)
 			if err != nil {
 				return err
 			}
@@ -652,7 +650,7 @@ func (blockchain *BlockChain) restoreCommitmentsFromTxViewPoint(view TxViewPoint
 }
 
 func (blockchain *BlockChain) ValidateBlockWithPrevBeaconBestState(block *BeaconBlock) error {
-	prevBST, err := blockchain.config.DataBase.FetchPrevBestState(true, 0)
+	prevBST, err := rawdb.FetchPrevBestState(blockchain.GetDatabase(), true, 0)
 	if err != nil {
 		return err
 	}
@@ -677,7 +675,7 @@ func (blockchain *BlockChain) ValidateBlockWithPrevBeaconBestState(block *Beacon
 	}
 	prevBlockHash := block.Header.PreviousBlockHash
 	// Verify parent hash exist or not
-	parentBlockBytes, err := blockchain.config.DataBase.FetchBeaconBlock(prevBlockHash)
+	parentBlockBytes, err := rawdb.FetchBeaconBlock(blockchain.GetDatabase(), prevBlockHash)
 	if err != nil {
 		return NewBlockChainError(DatabaseError, err)
 	}
@@ -701,7 +699,7 @@ func (blockchain *BlockChain) RevertBeaconState() error {
 }
 
 func (blockchain *BlockChain) revertBeaconBestState() error {
-	prevBST, err := blockchain.config.DataBase.FetchPrevBestState(true, 0)
+	prevBST, err := rawdb.FetchPrevBestState(blockchain.GetDatabase(), true, 0)
 	if err != nil {
 		return NewBlockChainError(RevertStateError, err)
 	}
@@ -737,20 +735,20 @@ func (blockchain *BlockChain) revertBeaconState() error {
 		return err
 	}
 
-	if err := blockchain.config.DataBase.DeleteCommitteeByHeight(currentBestStateBlk.Header.Height); err != nil {
+	if err := rawdb.DeleteCommitteeByHeight(blockchain.GetDatabase(), currentBestStateBlk.Header.Height); err != nil {
 		return err
 	}
 
 	for shardID, shardStates := range currentBestStateBlk.Body.ShardState {
 		for _, shardState := range shardStates {
-			blockchain.config.DataBase.DeleteAcceptedShardToBeacon(shardID, shardState.Hash)
+			rawdb.DeleteAcceptedShardToBeacon(blockchain.GetDatabase(), shardID, shardState.Hash)
 		}
 	}
 
 	lastCrossShardState := beaconBestState.LastCrossShardState
 	for fromShard, toShards := range lastCrossShardState {
 		for toShard, height := range toShards {
-			blockchain.config.DataBase.RestoreCrossShardNextHeights(fromShard, toShard, height)
+			rawdb.RestoreCrossShardNextHeights(blockchain.GetDatabase(), fromShard, toShard, height)
 		}
 		blockchain.config.CrossShardPool[fromShard].UpdatePool()
 	}
@@ -783,7 +781,7 @@ func (blockchain *BlockChain) revertBeaconState() error {
 			Logger.log.Infof("TxsFee in Epoch: %+v of shardID: %+v:\n", currentBestStateBlk.Header.Epoch, acceptedBlkRewardInfo.ShardID)
 			for key, value := range acceptedBlkRewardInfo.TxsFee {
 				Logger.log.Infof("===> TokenID:%+v: Amount: %+v\n", key, value)
-				err = blockchain.config.DataBase.RestoreShardRewardRequest(currentBestStateBlk.Header.Epoch, acceptedBlkRewardInfo.ShardID, key)
+				err = rawdb.RestoreShardRewardRequest(blockchain.GetDatabase(), currentBestStateBlk.Header.Epoch, acceptedBlkRewardInfo.ShardID, key)
 				if err != nil {
 					return err
 				}
@@ -791,7 +789,7 @@ func (blockchain *BlockChain) revertBeaconState() error {
 			}
 		}
 	}
-	err = blockchain.config.DataBase.DeleteBeaconBlock(currentBestStateBlk.Header.Hash(), currentBestStateBlk.Header.Height)
+	err = rawdb.DeleteBeaconBlock(blockchain.GetDatabase(), currentBestStateBlk.Header.Hash(), currentBestStateBlk.Header.Height)
 	if err != nil {
 		return err
 	}
@@ -810,7 +808,7 @@ func (blockchain *BlockChain) BackupCurrentBeaconState(block *BeaconBlock) error
 	if err != nil {
 		return NewBlockChainError(UnmashallJsonShardBlockError, err)
 	}
-	if err := blockchain.config.DataBase.StorePrevBestState(tempMarshal, true, 0); err != nil {
+	if err := rawdb.StorePrevBestState(blockchain.GetDatabase(), tempMarshal, true, 0); err != nil {
 		return NewBlockChainError(UnExpectedError, err)
 	}
 	for _, inst := range block.Body.Instructions {
@@ -841,7 +839,7 @@ func (blockchain *BlockChain) BackupCurrentBeaconState(block *BeaconBlock) error
 				acceptedBlkRewardInfo.TxsFee[common.PRVCoinID] = blockchain.getRewardAmount(acceptedBlkRewardInfo.ShardBlockHeight)
 			}
 			for key := range acceptedBlkRewardInfo.TxsFee {
-				err = blockchain.config.DataBase.BackupShardRewardRequest(block.Header.Epoch, acceptedBlkRewardInfo.ShardID, key)
+				err = rawdb.BackupShardRewardRequest(blockchain.GetDatabase(), block.Header.Epoch, acceptedBlkRewardInfo.ShardID, key)
 				if err != nil {
 					return err
 				}

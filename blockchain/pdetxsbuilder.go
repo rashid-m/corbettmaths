@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/incognitochain/incognito-chain/common"
-	"github.com/incognitochain/incognito-chain/database"
+	"github.com/incognitochain/incognito-chain/incdb"
 	"github.com/incognitochain/incognito-chain/metadata"
 	"github.com/incognitochain/incognito-chain/privacy"
 	"github.com/incognitochain/incognito-chain/transaction"
@@ -50,7 +50,7 @@ func buildTradeResTx(
 	requestedTxID common.Hash,
 	producerPrivateKey *privacy.PrivateKey,
 	shardID byte,
-	db database.DatabaseInterface,
+	db incdb.Database,
 ) (metadata.Transaction, error) {
 	meta := metadata.NewPDETradeResponse(
 		instStatus,
@@ -75,7 +75,8 @@ func buildTradeResTx(
 			receiveAmt,
 			&receiverAddr,
 			producerPrivateKey,
-			db,
+			//db,
+			nil,
 			meta,
 		)
 		if err != nil {
@@ -112,7 +113,8 @@ func buildTradeResTx(
 			nil,
 			0,
 			tokenParams,
-			db,
+			//db,
+			nil,
 			meta,
 			false,
 			false,
@@ -253,7 +255,8 @@ func (blockGenerator *BlockGenerator) buildPDEWithdrawalTx(
 			wdAcceptedContent.DeductingPoolValue,
 			&receiverAddr,
 			producerPrivateKey,
-			blockGenerator.chain.config.DataBase,
+			//db,
+			nil,
 			meta,
 		)
 		if err != nil {
@@ -291,7 +294,8 @@ func (blockGenerator *BlockGenerator) buildPDEWithdrawalTx(
 			nil,
 			0,
 			tokenParams,
-			blockGenerator.chain.config.DataBase,
+			//db,
+			nil,
 			meta,
 			false,
 			false,
@@ -348,7 +352,8 @@ func (blockGenerator *BlockGenerator) buildPDERefundContributionTx(
 			refundContribution.ContributedAmount,
 			&receiverAddr,
 			producerPrivateKey,
-			blockGenerator.chain.config.DataBase,
+			//db,
+			nil,
 			meta,
 		)
 		if err != nil {
@@ -386,7 +391,8 @@ func (blockGenerator *BlockGenerator) buildPDERefundContributionTx(
 			nil,
 			0,
 			tokenParams,
-			blockGenerator.chain.config.DataBase,
+			//db,
+			nil,
 			meta,
 			false,
 			false,
@@ -446,7 +452,8 @@ func (blockGenerator *BlockGenerator) buildPDEMatchedNReturnedContributionTx(
 			matchedNReturnedContribution.ReturnedContributedAmount,
 			&receiverAddr,
 			producerPrivateKey,
-			blockGenerator.chain.config.DataBase,
+			//db,
+			nil,
 			meta,
 		)
 		if err != nil {
@@ -482,7 +489,8 @@ func (blockGenerator *BlockGenerator) buildPDEMatchedNReturnedContributionTx(
 			nil,
 			0,
 			tokenParams,
-			blockGenerator.chain.config.DataBase,
+			//db,
+			nil,
 			meta,
 			false,
 			false,

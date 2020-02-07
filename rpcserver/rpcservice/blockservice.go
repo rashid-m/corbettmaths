@@ -9,7 +9,8 @@ import (
 
 	"github.com/incognitochain/incognito-chain/blockchain"
 	"github.com/incognitochain/incognito-chain/common"
-	"github.com/incognitochain/incognito-chain/database"
+	"github.com/incognitochain/incognito-chain/dataaccessobject/rawdb"
+	"github.com/incognitochain/incognito-chain/incdb"
 	"github.com/incognitochain/incognito-chain/memcache"
 	"github.com/incognitochain/incognito-chain/mempool"
 	"github.com/incognitochain/incognito-chain/rpcserver/jsonresult"
@@ -18,7 +19,7 @@ import (
 
 type BlockService struct {
 	BlockChain *blockchain.BlockChain
-	DB         *database.DatabaseInterface
+	DB         incdb.Database
 	TxMemPool  *mempool.TxPool
 	MemCache   *memcache.MemoryCache
 }
@@ -396,7 +397,7 @@ func (blockService BlockService) RetrieveBeaconBlock(hashString string) (*jsonre
 		Logger.log.Debugf("handleRetrieveBeaconBlock result: %+v, err: %+v", nil, errH)
 		return nil, NewRPCError(RPCInvalidParamsError, errH)
 	}
-	block, _, errD := blockService.BlockChain.GetBeaconBlockByHash(*hash)
+	block, _, errD := blockService.BlockChain.GetBeaconBlockByHashV2(*hash)
 	if errD != nil {
 		Logger.log.Debugf("handleRetrieveBeaconBlock result: %+v, err: %+v", nil, errD)
 		return nil, NewRPCError(GetBeaconBlockByHashError, errD)
@@ -408,11 +409,12 @@ func (blockService BlockService) RetrieveBeaconBlock(hashString string) (*jsonre
 	var nextHashString string
 	// if blockHeight < best.Header.GetHeight() {
 	if blockHeight < best.Header.Height {
-		nextHash, err := blockService.BlockChain.GetBeaconBlockByHeight(blockHeight + 1)
+		nextHashes, err := blockService.BlockChain.GetBeaconBlockByHeightV2(blockHeight + 1)
 		if err != nil {
 			Logger.log.Debugf("handleRetrieveBeaconBlock result: %+v, err: %+v", nil, err)
 			return nil, NewRPCError(GetBeaconBlockByHeightError, err)
 		}
+		nextHash := nextHashes[0]
 		nextHashString = nextHash.Hash().String()
 	}
 	blockBytes, errS := json.Marshal(block)
@@ -692,7 +694,7 @@ func (blockService BlockService) GetMinerRewardFromMiningKey(incPublicKey []byte
 	rewardAmounts := make(map[common.Hash]uint64)
 
 	for _, coinID := range allCoinIDs {
-		amount, err := (*blockService.DB).GetCommitteeReward(incPublicKey, coinID)
+		amount, err := rawdb.GetCommitteeReward((blockService.DB), incPublicKey, coinID)
 		if err != nil {
 			return nil, err
 		}
@@ -750,7 +752,7 @@ func (blockService BlockService) GetRewardAmount(paymentAddress string) (map[str
 	}
 
 	for _, coinID := range allCoinIDs {
-		amount, err := (*blockService.DB).GetCommitteeReward(publicKey, coinID)
+		amount, err := rawdb.GetCommitteeReward((blockService.DB), publicKey, coinID)
 		if err != nil {
 			return nil, NewRPCError(UnexpectedError, err)
 		}
@@ -829,6 +831,37 @@ func (blockService BlockService) GetBlockHashByHeight(shardID int, height uint64
 
 	result := hash.String()
 	return result, nil
+}
+
+func (blockService BlockService) GetBlockHashByHeightV2(shardID int, height uint64) ([]common.Hash, error) {
+	var hash *common.Hash
+	var err error
+	var beaconBlocks []*blockchain.BeaconBlock
+	var shardBlocks map[common.Hash]*blockchain.ShardBlock
+	res := []common.Hash{}
+	isGetBeacon := shardID == -1
+	if isGetBeacon {
+		beaconBlocks, err = blockService.BlockChain.GetBeaconBlockByHeightV2(height)
+	} else {
+		shardBlocks, err = blockService.BlockChain.GetShardBlockByHeightV2(height, byte(shardID))
+	}
+	if err != nil {
+		Logger.log.Debugf("handleGetBlockHash result: %+v", nil)
+		return res, err
+	}
+
+	if isGetBeacon {
+		for _, beaconBlock := range beaconBlocks {
+			hash = beaconBlock.Hash()
+			res = append(res, *hash)
+		}
+	} else {
+		for _, shardBlock := range shardBlocks {
+			hash = shardBlock.Hash()
+			res = append(res, *hash)
+		}
+	}
+	return res, nil
 }
 
 func (blockService BlockService) GetBlockHeader(getBy string, blockParam string, shardID float64) (

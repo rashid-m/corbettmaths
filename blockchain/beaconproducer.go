@@ -56,6 +56,9 @@ import (
 		+ Block Producer Signature is not included in block header
 */
 func (blockGenerator *BlockGenerator) NewBlockBeacon(round int, shardsToBeaconLimit map[byte]uint64) (*BeaconBlock, error) {
+	if DATABASE_VERSION == 2 {
+		return blockGenerator.NewBlockBeaconV2(round, shardsToBeaconLimit)
+	}
 	// lock blockchain
 	blockGenerator.chain.chainLock.Lock()
 	defer blockGenerator.chain.chainLock.Unlock()
@@ -727,7 +730,7 @@ func (blockchain *BlockChain) GetShardStateFromBlock(newBeaconHeight uint64, sha
 		shardBlock.Instructions,
 		newBeaconHeight,
 		//beaconBestState,
-		blockchain.config.DataBase,
+		blockchain.GetDatabase(),
 	)
 	if err != nil {
 		BLogger.log.Errorf("Build bridge instructions failed: %s", err.Error())
