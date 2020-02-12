@@ -469,7 +469,7 @@ func (beaconBestState *BeaconBestState) updateBeaconBestStateV2(beaconBlock *Bea
 	if beaconBlock.Header.Height == 1 {
 		beaconBestState.BeaconProposerIndex = 0
 	} else {
-		beaconBestState.BeaconProposerIndex = (beaconBestState.BeaconProposerIndex + beaconBlock.Header.Round) % len(beaconBestState.BeaconCommittee)
+		beaconBestState.BeaconProposerIndex = 0
 	}
 	if beaconBestState.BestShardHash == nil {
 		beaconBestState.BestShardHash = make(map[byte]common.Hash)
