@@ -4,21 +4,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/incognitochain/incognito-chain/incdb"
-	"reflect"
-	"sort"
-	"strconv"
-	"strings"
-	"time"
-
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/dataaccessobject/rawdbv2"
 	"github.com/incognitochain/incognito-chain/dataaccessobject/statedb"
+	"github.com/incognitochain/incognito-chain/incdb"
 	"github.com/incognitochain/incognito-chain/incognitokey"
 	"github.com/incognitochain/incognito-chain/metadata"
 	"github.com/incognitochain/incognito-chain/pubsub"
 	"github.com/incognitochain/incognito-chain/transaction"
 	"github.com/pkg/errors"
+	"reflect"
+	"sort"
+	"strconv"
+	"strings"
 )
 
 //VerifyPreSignShardBlockV2 Verify Shard Block Before Signing
@@ -72,11 +70,6 @@ func (blockchain *BlockChain) VerifyPreSignShardBlockV2(shardBlock *ShardBlock, 
 func (blockchain *BlockChain) InsertShardBlockV2(shardBlock *ShardBlock, isValidated bool) error {
 	blockchain.chainLock.Lock()
 	defer blockchain.chainLock.Unlock()
-	if shardBlock.Header.Height == 121997 {
-		time.Sleep(10 * time.Second)
-		return nil
-	}
-	isValidated = true
 	shardID := shardBlock.Header.ShardID
 	blockHash := shardBlock.Header.Hash()
 	blockHeight := shardBlock.Header.Height
