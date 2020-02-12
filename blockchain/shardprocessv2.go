@@ -528,7 +528,7 @@ func (shardBestState *ShardBestState) updateShardBestStateV2(blockchain *BlockCh
 	if shardBlock.Header.Height == 1 {
 		shardBestState.ShardProposerIdx = 0
 	} else {
-		shardBestState.ShardProposerIdx = (shardBestState.ShardProposerIdx + shardBlock.Header.Round) % len(shardBestState.ShardCommittee)
+		shardBestState.ShardProposerIdx = 0
 	}
 	//shardBestState.processBeaconBlocks(shardBlock, beaconBlocks)
 	shardPendingValidator, newShardPendingValidator, stakingTx := blockchain.processInstructionFromBeaconV2(beaconBlocks, shardBlock.Header.ShardID, committeeChange)
