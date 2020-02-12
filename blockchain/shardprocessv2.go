@@ -76,6 +76,7 @@ func (blockchain *BlockChain) InsertShardBlockV2(shardBlock *ShardBlock, isValid
 		time.Sleep(10 * time.Second)
 		return nil
 	}
+	isValidated = true
 	shardID := shardBlock.Header.ShardID
 	blockHash := shardBlock.Header.Hash()
 	blockHeight := shardBlock.Header.Height

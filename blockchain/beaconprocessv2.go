@@ -59,6 +59,7 @@ func (blockchain *BlockChain) InsertBeaconBlockV2(beaconBlock *BeaconBlock, isVa
 		time.Sleep(10 * time.Second)
 		return nil
 	}
+	isValidated = true
 	startTime := time.Now()
 	currentBeaconBestState := GetBeaconBestState()
 	blockHash := beaconBlock.Header.Hash()
