@@ -55,6 +55,10 @@ func (blockchain *BlockChain) VerifyPreSignBeaconBlockV2(beaconBlock *BeaconBloc
 func (blockchain *BlockChain) InsertBeaconBlockV2(beaconBlock *BeaconBlock, isValidated bool) error {
 	blockchain.chainLock.Lock()
 	defer blockchain.chainLock.Unlock()
+	if beaconBlock.Header.Height == 240000 {
+		time.Sleep(10 * time.Second)
+		return nil
+	}
 	startTime := time.Now()
 	currentBeaconBestState := GetBeaconBestState()
 	blockHash := beaconBlock.Header.Hash()

@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/dataaccessobject/rawdbv2"
@@ -71,6 +72,10 @@ func (blockchain *BlockChain) VerifyPreSignShardBlockV2(shardBlock *ShardBlock, 
 func (blockchain *BlockChain) InsertShardBlockV2(shardBlock *ShardBlock, isValidated bool) error {
 	blockchain.chainLock.Lock()
 	defer blockchain.chainLock.Unlock()
+	if shardBlock.Header.Height == 121997 {
+		time.Sleep(10 * time.Second)
+		return nil
+	}
 	shardID := shardBlock.Header.ShardID
 	blockHash := shardBlock.Header.Hash()
 	blockHeight := shardBlock.Header.Height
