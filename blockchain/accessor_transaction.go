@@ -22,14 +22,16 @@ import (
 	"time"
 )
 
-func (blockchain *BlockChain) ValidateResponseTransactionFromTxsWithMetadataV2(shardBody *ShardBody, shardID byte) error {
-	txRequestTable := reqTableFromReqTxs(shardBody.Transactions)
-	txsSpamRemoved := filterReqTxs(shardBody.Transactions, txRequestTable)
-	if len(shardBody.Transactions) != len(txsSpamRemoved) {
-		return errors.Errorf("This block contains txs spam request reward. Number of spam: %v", len(shardBody.Transactions)-len(txsSpamRemoved))
+func (blockchain *BlockChain) ValidateResponseTransactionFromTxsWithMetadataV2(shardBlock *ShardBlock) error {
+	txRequestTable := reqTableFromReqTxs(shardBlock.Body.Transactions)
+	if shardBlock.Header.Timestamp > ValidateTimeForSpamRequestTxs {
+		txsSpamRemoved := filterReqTxs(shardBlock.Body.Transactions, txRequestTable)
+		if len(shardBlock.Body.Transactions) != len(txsSpamRemoved) {
+			return errors.Errorf("This block contains txs spam request reward. Number of spam: %v", len(shardBlock.Body.Transactions)-len(txsSpamRemoved))
+		}
 	}
 	txReturnTable := map[string]bool{}
-	for _, tx := range shardBody.Transactions {
+	for _, tx := range shardBlock.Body.Transactions {
 		switch tx.GetMetadataType() {
 		case metadata.WithDrawRewardResponseMeta:
 			_, requesterRes, amountRes, coinID := tx.GetTransferData()
@@ -51,7 +53,7 @@ func (blockchain *BlockChain) ValidateResponseTransactionFromTxsWithMetadataV2(s
 			Logger.log.Infof("Coin ID %+v", *coinID)
 			Logger.log.Infof("Amount Request %+v", amountRes)
 			Logger.log.Infof("Temp Public Key %+v", tempPublicKey)
-			amount, err := statedb.GetCommitteeReward(blockchain.BestState.Shard[shardID].GetCopiedRewardStateDB(), tempPublicKey, requestMeta.TokenID)
+			amount, err := statedb.GetCommitteeReward(blockchain.BestState.Shard[shardBlock.Header.ShardID].GetCopiedRewardStateDB(), tempPublicKey, requestMeta.TokenID)
 			if (amount == 0) || (err != nil) {
 				return errors.Errorf("Invalid request %v, amount from db %v, error %v", requester, amount, err)
 			}
@@ -69,8 +71,10 @@ func (blockchain *BlockChain) ValidateResponseTransactionFromTxsWithMetadataV2(s
 			}
 		}
 	}
-	if len(txRequestTable) > 0 {
-		return errors.Errorf("Not match request and response, num of unresponse request: %v", len(txRequestTable))
+	if shardBlock.Header.Timestamp > ValidateTimeForSpamRequestTxs {
+		if len(txRequestTable) > 0 {
+			return errors.Errorf("Not match request and response, num of unresponse request: %v", len(txRequestTable))
+		}
 	}
 	return nil
 }
@@ -325,17 +329,16 @@ func (blockchain *BlockChain) CreateAndSaveTxViewPointFromBlockV2(shardBlock *Sh
 			{
 				// check is bridge token
 				// not mintable tx
-				if !isBridgeToken && !privacyCustomTokenTx.TxPrivacyTokenData.Mintable {
+				if !isBridgeToken {
 					tokenID := privacyCustomTokenTx.TxPrivacyTokenData.PropertyID
 					name := privacyCustomTokenTx.TxPrivacyTokenData.PropertyName
 					symbol := privacyCustomTokenTx.TxPrivacyTokenData.PropertySymbol
-					tokenType := privacyCustomTokenTx.TxPrivacyTokenData.Type
 					mintable := privacyCustomTokenTx.TxPrivacyTokenData.Mintable
 					amount := privacyCustomTokenTx.TxPrivacyTokenData.Amount
 					info := privacyCustomTokenTx.Tx.Info
 					txHash := *privacyCustomTokenTx.Hash()
 					Logger.log.Info("Store custom token when it is issued", privacyCustomTokenTx.TxPrivacyTokenData.PropertyID, privacyCustomTokenTx.TxPrivacyTokenData.PropertySymbol, privacyCustomTokenTx.TxPrivacyTokenData.PropertyName)
-					err = statedb.StorePrivacyToken(transactionStateRoot, tokenID, name, symbol, tokenType, mintable, amount, info, txHash)
+					err = statedb.StorePrivacyToken(transactionStateRoot, tokenID, name, symbol, statedb.InitToken, mintable, amount, info, txHash)
 					if err != nil {
 						return err
 					}
@@ -346,7 +349,7 @@ func (blockchain *BlockChain) CreateAndSaveTxViewPointFromBlockV2(shardBlock *Sh
 				Logger.log.Info("Transfer custom token %+v", privacyCustomTokenTx)
 			}
 		}
-		err = statedb.StorePrivacyTokenTx(transactionStateRoot, privacyCustomTokenTx.TxPrivacyTokenData.PropertyID, *privacyCustomTokenTx.Hash(), privacyCustomTokenTx.TxPrivacyTokenData.Mintable || isBridgeToken)
+		err = statedb.StorePrivacyTokenTx(transactionStateRoot, privacyCustomTokenTx.TxPrivacyTokenData.PropertyID, *privacyCustomTokenTx.Hash(), isBridgeToken)
 		if err != nil {
 			return err
 		}
@@ -517,11 +520,10 @@ func (blockchain *BlockChain) CreateAndSaveCrossTransactionViewPointFromBlockV2(
 			Logger.log.Info("Store custom token when it is issued ", tokenID, privacyCustomTokenSubView.privacyCustomTokenMetadata.PropertyName, privacyCustomTokenSubView.privacyCustomTokenMetadata.PropertySymbol, privacyCustomTokenSubView.privacyCustomTokenMetadata.Amount, privacyCustomTokenSubView.privacyCustomTokenMetadata.Mintable)
 			name := privacyCustomTokenSubView.privacyCustomTokenMetadata.PropertyName
 			symbol := privacyCustomTokenSubView.privacyCustomTokenMetadata.PropertySymbol
-			tokenType := privacyCustomTokenSubView.privacyCustomTokenMetadata.Type
 			mintable := privacyCustomTokenSubView.privacyCustomTokenMetadata.Mintable
 			amount := privacyCustomTokenSubView.privacyCustomTokenMetadata.Amount
 			info := []byte{}
-			if err := statedb.StorePrivacyToken(transactionStateRoot, tokenID, name, symbol, tokenType, mintable, amount, info, common.Hash{}); err != nil {
+			if err := statedb.StorePrivacyToken(transactionStateRoot, tokenID, name, symbol, statedb.CrossShardToken, mintable, amount, info, common.Hash{}); err != nil {
 				return err
 			}
 		}

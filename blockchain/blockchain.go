@@ -2,11 +2,8 @@ package blockchain
 
 import (
 	"bytes"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"io"
-	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -1191,11 +1188,15 @@ func (blockchain *BlockChain) BuildResponseTransactionFromTxsWithMetadata(
 	return txsSpamRemoved, nil
 }
 
-func (blockchain *BlockChain) ValidateResponseTransactionFromTxsWithMetadata(blkBody *ShardBody) error {
+func (blockchain *BlockChain) ValidateResponseTransactionFromTxsWithMetadata(blk *ShardBlock) error {
+	blkBody := blk.Body
 	txRequestTable := reqTableFromReqTxs(blkBody.Transactions)
-	txsSpamRemoved := filterReqTxs(blkBody.Transactions, txRequestTable)
-	if len(blkBody.Transactions) != len(txsSpamRemoved) {
-		return errors.Errorf("This block contains txs spam request reward. Number of spam: %v", len(blkBody.Transactions)-len(txsSpamRemoved))
+	// validate more than with spam request tx
+	if blk.Header.Timestamp > ValidateTimeForSpamRequestTxs {
+		txsSpamRemoved := filterReqTxs(blkBody.Transactions, txRequestTable)
+		if len(blkBody.Transactions) != len(txsSpamRemoved) {
+			return errors.Errorf("This block contains txs spam request reward. Number of spam: %v", len(blkBody.Transactions)-len(txsSpamRemoved))
+		}
 	}
 	txReturnTable := map[string]bool{}
 	db := blockchain.config.DataBase
@@ -1234,92 +1235,9 @@ func (blockchain *BlockChain) ValidateResponseTransactionFromTxsWithMetadata(blk
 			}
 		}
 	}
-	if len(txRequestTable) > 0 {
-		return errors.Errorf("Not match request and response, num of unresponse request: %v", len(txRequestTable))
-	}
-	return nil
-}
-
-func CalculateNumberOfByteToRead(amountBytes int) []byte {
-	var result = make([]byte, 8)
-	binary.LittleEndian.PutUint32(result, uint32(amountBytes))
-	return result
-}
-func GetNumberOfByteToRead(value []byte) (int, error) {
-	var result uint32
-	err := binary.Read(bytes.NewBuffer(value), binary.LittleEndian, &result)
-	if err != nil {
-		return -1, err
-	}
-	return int(result), nil
-}
-func (blockchain *BlockChain) BackupShardChain(writer io.Writer, shardID byte) error {
-	bestStateBytes, err := rawdb.FetchShardBestState(blockchain.config.DataBase, shardID)
-	if err != nil {
-		return err
-	}
-	shardBestState := &ShardBestState{}
-	err = json.Unmarshal(bestStateBytes, shardBestState)
-	bestShardHeight := shardBestState.ShardHeight
-	var i uint64
-	for i = 1; i < bestShardHeight; i++ {
-		block, err := blockchain.GetShardBlockByHeight(i, shardID)
-		if err != nil {
-			return err
-		}
-		data, err := json.Marshal(block)
-		if err != nil {
-			return err
-		}
-		_, err = writer.Write(CalculateNumberOfByteToRead(len(data)))
-		if err != nil {
-			return err
-		}
-		_, err = writer.Write(data)
-		if err != nil {
-			return err
-		}
-		if i%100 == 0 {
-			log.Printf("Backup Shard %+v Block %+v", block.Header.ShardID, i)
-		}
-		if i == bestShardHeight-1 {
-			log.Printf("Finish Backup Shard %+v with Block %+v", block.Header.ShardID, i)
-		}
-	}
-	return nil
-}
-func (blockchain *BlockChain) BackupBeaconChain(writer io.Writer) error {
-	bestStateBytes, err := rawdb.FetchBeaconBestState(blockchain.GetDatabase())
-	if err != nil {
-		return err
-	}
-	beaconBestState := &BeaconBestState{}
-	err = json.Unmarshal(bestStateBytes, beaconBestState)
-	bestBeaconHeight := beaconBestState.BeaconHeight
-	var i uint64
-	for i = 1; i < bestBeaconHeight; i++ {
-		block, err := blockchain.GetBeaconBlockByHeight(i)
-		if err != nil {
-			return err
-		}
-		data, err := json.Marshal(block)
-		if err != nil {
-			return err
-		}
-		numOfByteToRead := CalculateNumberOfByteToRead(len(data))
-		_, err = writer.Write(numOfByteToRead)
-		if err != nil {
-			return err
-		}
-		_, err = writer.Write(data)
-		if err != nil {
-			return err
-		}
-		if i%100 == 0 {
-			log.Printf("Backup Beacon Block %+v", i)
-		}
-		if i == bestBeaconHeight-1 {
-			log.Printf("Finish Backup Beacon with Block %+v", i)
+	if blk.Header.Timestamp > ValidateTimeForSpamRequestTxs {
+		if len(txRequestTable) > 0 {
+			return errors.Errorf("Not match request and response, num of unresponse request: %v", len(txRequestTable))
 		}
 	}
 	return nil

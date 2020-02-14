@@ -1,6 +1,10 @@
 package main
 
 import (
+	"github.com/incognitochain/incognito-chain/consensus"
+	"github.com/incognitochain/incognito-chain/dataaccessobject"
+	"github.com/incognitochain/incognito-chain/peerv2"
+	"github.com/incognitochain/incognito-chain/trie"
 	"io"
 	"log"
 	"os"
@@ -12,13 +16,17 @@ import (
 	"github.com/incognitochain/incognito-chain/blockchain"
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/incdb"
+	_ "github.com/incognitochain/incognito-chain/incdb/lvdb"
 	"github.com/incognitochain/incognito-chain/mempool"
 	"github.com/incognitochain/incognito-chain/pubsub"
 )
 
 func makeBlockChain(databaseDir string, testNet bool) (*blockchain.BlockChain, error) {
 	blockchain.Logger.Init(common.NewBackend(nil).Logger("ChainCMD", true))
+	blockchain.BLogger.Init(common.NewBackend(nil).Logger("ChainCMD", true))
 	mempool.Logger.Init(common.NewBackend(nil).Logger("ChainCMD", true))
+	dataaccessobject.Logger.Init(common.NewBackend(nil).Logger("ChainCMD", true))
+	trie.Logger.Init(common.NewBackend(nil).Logger("ChainCMD", true))
 	db, err := incdb.Open("leveldb", filepath.Join(databaseDir))
 	if err != nil {
 		return nil, err
@@ -55,6 +63,8 @@ func makeBlockChain(databaseDir string, testNet bool) (*blockchain.BlockChain, e
 		CrossShardPool:    crossShardPoolMap,
 		ShardPool:         shardPoolMap,
 		TxPool:            txPool,
+		ConsensusEngine:   &consensus.Engine{},
+		Highway:           &peerv2.ConnManager{},
 	})
 	if err != nil {
 		return nil, err

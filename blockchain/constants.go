@@ -32,6 +32,7 @@ const (
 	NumberOfFixedBlockValidators = 4
 	BEACON_ID                    = -1 // CommitteeID of beacon chain, used for highway
 	DATABASE_VERSION             = 2
+	ValidateTimeForSpamRequestTxs = 1581565837 // GMT: Thursday, February 13, 2020 3:50:37 AM. From this time, block will be checked spam request-reward tx
 )
 
 // burning addresses

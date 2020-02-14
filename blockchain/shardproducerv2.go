@@ -110,7 +110,7 @@ func (blockGenerator *BlockGenerator) NewBlockShardV2(shardID byte, round int, c
 	newShardBlock.BuildShardBlockBody(instructions, crossTransactions, transactionsForNewBlock)
 	//==========Build Essential Header Data=========
 	// producer key
-	producerPosition := (blockGenerator.chain.BestState.Shard[shardID].ShardProposerIdx + round) % len(currentCommitteePubKeys)
+	producerPosition := (blockGenerator.chain.BestState.Shard[shardID].ShardProposerIdx) % len(currentCommitteePubKeys)
 	producerKey, err := blockGenerator.chain.BestState.Shard[shardID].ShardCommittee[producerPosition].ToBase58()
 	if err != nil {
 		return nil, NewBlockChainError(UnExpectedError, err)

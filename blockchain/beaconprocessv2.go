@@ -409,7 +409,7 @@ func (beaconBestState *BeaconBestState) initBeaconBestStateV2(genesisBeaconBlock
 	}
 	// update param
 	for _, instruction := range genesisBeaconBlock.Body.Instructions {
-		err, _, tempNewBeaconCandidate, tempNewShardCandidate := beaconBestState.processInstruction(instruction)
+		err, _, tempNewBeaconCandidate, tempNewShardCandidate := beaconBestState.processInstructionV2(instruction, newCommitteeChange())
 		if err != nil {
 			return err
 		}
@@ -890,9 +890,9 @@ func (blockchain *BlockChain) processStoreBeaconBlockV2(beaconBlock *BeaconBlock
 	}
 	// Remove shard reward request of old epoch
 	// this value is no longer needed because, old epoch reward has been split and send to shard
-	//if beaconBlock.Header.Height%blockchain.config.ChainParams.Epoch == 2 {
-	//	statedb.RemoveRewardOfShardByEpoch(tempBeaconBestState.rewardStateDB, beaconBlock.Header.Epoch-1)
-	//}
+	if beaconBlock.Header.Height%blockchain.config.ChainParams.Epoch == 2 {
+		statedb.RemoveRewardOfShardByEpoch(tempBeaconBestState.rewardStateDB, beaconBlock.Header.Epoch-1)
+	}
 	err = blockchain.addShardRewardRequestToBeaconV2(beaconBlock, tempBeaconBestState.rewardStateDB)
 	if err != nil {
 		return NewBlockChainError(UpdateDatabaseWithBlockRewardInfoError, err)

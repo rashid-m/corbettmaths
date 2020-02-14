@@ -142,7 +142,7 @@ func (blockchain *BlockChain) InsertShardBlockV2(shardBlock *ShardBlock, isValid
 	}
 	Logger.log.Infof("SHARD %+v | Remove Data After Processed, block height %+v with hash %+v \n", shardID, blockHeight, blockHash)
 	Logger.log.Infof("SHARD %+v | Update Beacon Instruction, block height %+v with hash %+v \n", shardID, blockHeight, blockHash)
-	err = blockchain.processSalaryInstructionsV2(tempShardBestState.rewardStateDB, beaconBlocks, shardID, blockHeight)
+	err = blockchain.processSalaryInstructionsV2(tempShardBestState.rewardStateDB, beaconBlocks, shardID)
 	if err != nil {
 		return err
 	}
@@ -332,7 +332,7 @@ func (blockchain *BlockChain) verifyPreProcessingShardBlockV2(shardBlock *ShardB
 	if len(invalidTxs) > 0 {
 		return NewBlockChainError(TransactionCreatedByMinerError, fmt.Errorf("There are %d invalid txs", len(invalidTxs)))
 	}
-	err = blockchain.ValidateResponseTransactionFromTxsWithMetadataV2(&shardBlock.Body, shardID)
+	err = blockchain.ValidateResponseTransactionFromTxsWithMetadataV2(shardBlock)
 	if err != nil {
 		return NewBlockChainError(ResponsedTransactionWithMetadataError, err)
 	}
