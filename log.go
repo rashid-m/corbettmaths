@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/incognitochain/incognito-chain/dataaccessobject"
 	"os"
 	"path/filepath"
+
+	"github.com/incognitochain/incognito-chain/dataaccessobject"
+	"github.com/incognitochain/incognito-chain/peerv2/rpcclient"
 
 	"github.com/incognitochain/incognito-chain/addrmanager"
 	"github.com/incognitochain/incognito-chain/blockchain"
@@ -56,6 +58,7 @@ var (
 	trieLogger             = backendLog.Logger("Trie log", false)
 	peerv2Logger           = backendLog.Logger("Peerv2 log", false)
 	daov2Logger            = backendLog.Logger("DAO log", false)
+	peerv2RPCLogger        = backendLog.Logger("Peerv2RPC log", false)
 )
 
 // logWriter implements an io.Writer that outputs to both standard output and
@@ -95,7 +98,7 @@ func init() {
 	trie.Logger.Init(trieLogger)
 	peerv2.Logger.Init(peerv2Logger)
 	dataaccessobject.Logger.Init(daov2Logger)
-
+	rpcclient.Logger.Init(peerv2RPCLogger)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
@@ -123,6 +126,7 @@ var subsystemLoggers = map[string]common.Logger{
 	"TRIE":              trieLogger,
 	"PEERV2":            peerv2Logger,
 	"DAO":               daov2Logger,
+	"PEERV2RPC":         peerv2RPCLogger,
 }
 
 // initLogRotator initializes the logging rotater to write logs to logFile and
