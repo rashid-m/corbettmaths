@@ -43,7 +43,7 @@ func (blockchain *BlockChain) ValidateBlockWithPreviousBeaconBestStateV2(beaconB
 		return NewBlockChainError(ValidateBlockWithPreviousBeaconBestStateError, err)
 	}
 	producerPk := beaconBlock.Header.Producer
-	producerPosition := (previousBeaconBestState.BeaconProposerIndex + beaconBlock.Header.Round) % len(previousBeaconBestState.BeaconCommittee)
+	producerPosition := (previousBeaconBestState.BeaconProposerIndex) % len(previousBeaconBestState.BeaconCommittee)
 	tempProducer := previousBeaconBestState.BeaconCommittee[producerPosition].GetMiningKeyBase58(previousBeaconBestState.ConsensusAlgorithm)
 	if strings.Compare(tempProducer, producerPk) != 0 {
 		return NewBlockChainError(ValidateBlockWithPreviousBeaconBestStateError, fmt.Errorf("Producer should be should be: %+v", tempProducer))
@@ -80,7 +80,7 @@ func (blockchain *BlockChain) ValidateBlockWithPreviousShardBestStateV2(shardBlo
 		return err
 	}
 	producerPk := shardBlock.Header.Producer
-	producerPosition := (shardBestState.ShardProposerIdx + shardBlock.Header.Round) % len(shardBestState.ShardCommittee)
+	producerPosition := (shardBestState.ShardProposerIdx) % len(shardBestState.ShardCommittee)
 	tempProducer := shardBestState.ShardCommittee[producerPosition].GetMiningKeyBase58(shardBestState.ConsensusAlgorithm)
 	if strings.Compare(tempProducer, producerPk) != 0 {
 		return NewBlockChainError(ValidateBlockWithPreviousShardBestStateError, errors.New("Producer should be should be :"+tempProducer))
