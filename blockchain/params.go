@@ -152,6 +152,6 @@ func init() {
 		},
 		CheckForce:                     false,
 		ChainVersion:                   "version-chain-main.json",
-		BeaconHeightBreakPointBurnAddr: 150500,
+		BeaconHeightBreakPointBurnAddr: 0,
 	}
 }
