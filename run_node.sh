@@ -82,6 +82,9 @@ fi
 if [ "$1" == "fullnode-mainnet" ]; then
 ./incognito --testnet true --nodemode "relay" --externaladdress "127.0.0.1:9433" --enablewallet --wallet "wallet" --walletpassphrase "12345678" --walletautoinit --norpcauth --datadir "../mainnet/fullnode" --discoverpeersaddress "mainnet-bootnode.incognito.org:9330"
 fi
+if [ "$1" == "fullnode-devnet" ]; then
+./incognito --nodemode "relay" --relayshards "all" --listen "127.0.0.1:9433" --externaladdress "0.0.0.0:9433" --enablewallet --wallet "wallet" --walletpassphrase "12345678" --walletautoinit --testnet "true" --norpcauth --datadir "data/fullnode" --discoverpeersaddress "139.162.9.169:9331" --txpoolttl 3600 --rpcmaxclients 3000
+fi
 ######
 if [ "$1" == "shard-candidate0-1" ]; then
 ./incognito --discoverpeersaddress "127.0.0.1:9330" --privatekey "112t8rq19Uu7UGbTApZzZwCAvVszAgRNAzHzr3p8Cu75jPH3h5AUtRXMKiqF3hw8NbEfeLcjtbpeUvJfw4tGj7pbqwDYngc8wB13Gf77o33f" --nodemode "auto" --datadir "data/shard-stake" --listen "127.0.0.1:9455" --externaladdress "127.0.0.1:9455" --norpcauth --rpclisten "127.0.0.1:9355"
