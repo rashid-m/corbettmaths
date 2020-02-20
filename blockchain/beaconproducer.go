@@ -98,7 +98,7 @@ func (blockGenerator *BlockGenerator) NewBlockBeacon(round int, shardsToBeaconLi
 	//=====END Build Header Essential Data=====
 	//============Build body===================
 	if (beaconBestState.BeaconHeight+1)%blockGenerator.chain.config.ChainParams.Epoch == 1 {
-		rewardByEpochInstruction, err = blockGenerator.chain.BuildRewardInstructionByEpochV2(beaconBlock.Header.Height, beaconBestState.Epoch, blockGenerator.chain.BestState.Beacon.GetCopiedRewardStateDB())
+		rewardByEpochInstruction, err = blockGenerator.chain.BuildRewardInstructionByEpoch(beaconBlock.Header.Height, beaconBestState.Epoch, blockGenerator.chain.BestState.Beacon.GetCopiedRewardStateDB())
 		if err != nil {
 			return nil, NewBlockChainError(BuildRewardInstructionError, err)
 		}
@@ -616,7 +616,7 @@ func (beaconBestState *BeaconBestState) GenerateInstruction(
 			return [][]string{}, err
 		}
 		slashStateDB, err := statedb.NewWithPrefixTrie(rootHash, statedb.NewDatabaseAccessWarper(blockchain.GetDatabase()))
-		producersBlackList, err := blockchain.getUpdatedProducersBlackListV2(slashStateDB, true, -1, beaconCommitteeStr, newBeaconHeight-1)
+		producersBlackList, err := blockchain.getUpdatedProducersBlackList(slashStateDB, true, -1, beaconCommitteeStr, newBeaconHeight-1)
 		if err != nil {
 			Logger.log.Error(err)
 		}
