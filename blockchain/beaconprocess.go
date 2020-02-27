@@ -250,6 +250,12 @@ func (blockchain *BlockChain) InsertBeaconBlock(beaconBlock *BeaconBlock, isVali
 	// 	})
 	// }
 	Logger.log.Infof("Finish Insert new Beacon Block %+v, with hash %+v \n", beaconBlock.Header.Height, *beaconBlock.Hash())
+	if beaconBlock.GetHeight() == 2 {
+		timeSync[8] = time.Now()
+	}
+	if beaconBlock.GetHeight() == 100000 {
+		Logger.log.Infof("[synctime] Time for sync 2->100000 block beacon: %v", time.Since(timeSync[8]))
+	}
 	if beaconBlock.Header.Height%50 == 0 {
 		BLogger.log.Debugf("Inserted beacon height: %d", beaconBlock.Header.Height)
 	}

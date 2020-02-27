@@ -119,6 +119,7 @@ var PreSelectBeaconNodeTestnetSerializedPubkey = []string{}
 var PreSelectBeaconNodeTestnetSerializedPaymentAddress = []string{}
 var PreSelectShardNodeTestnetSerializedPubkey = []string{}
 var PreSelectShardNodeTestnetSerializedPaymentAddress = []string{}
+var timeSync []time.Time
 
 func init() {
 	if len(os.Args) > 0 && (strings.Contains(os.Args[0], "test") || strings.Contains(os.Args[0], "Test")) {
@@ -177,6 +178,7 @@ func init() {
 			}
 		}
 	}
+	timeSync = make([]time.Time, 9)
 }
 
 // For shard

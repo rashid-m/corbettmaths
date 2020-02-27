@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/incognitochain/incognito-chain/database"
 
@@ -73,6 +74,7 @@ func (blockchain *BlockChain) VerifyPreSignShardBlock(shardBlock *ShardBlock, sh
 	Insert Shard Block into blockchain
 	@Notice: this block must have full information (complete block)
 */
+
 func (blockchain *BlockChain) InsertShardBlock(shardBlock *ShardBlock, isValidated bool) error {
 	blockchain.chainLock.Lock()
 	defer blockchain.chainLock.Unlock()
@@ -233,6 +235,12 @@ func (blockchain *BlockChain) InsertShardBlock(shardBlock *ShardBlock, isValidat
 	//	})
 	//}
 	Logger.log.Infof("SHARD %+v | 🔗 Finish Insert new block %d, with hash %+v", shardBlock.Header.ShardID, shardBlock.Header.Height, blockHash)
+	if shardBlock.GetHeight() == 2 {
+		timeSync[shardBlock.Header.ShardID] = time.Now()
+	}
+	if shardBlock.GetHeight() == 100000 {
+		Logger.log.Infof("[synctime] Time for sync 2->100000 block shard %v: %v", shardBlock.Header.ShardID, time.Since(timeSync[shardBlock.Header.ShardID]))
+	}
 	return nil
 }
 
