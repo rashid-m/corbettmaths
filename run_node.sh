@@ -80,7 +80,7 @@ if [ "$1" == "fullnode-testnet-b4" ]; then
 GO111MODULE=on GETH_NAME=kovan.infura.io/v3/1138a1e99b154b10bae5c382ad894361 GETH_PROTOCOL=https GETH_PORT="" ./incognito --testnet true --nodemode "relay" --relayshards "[4]" --externaladdress "127.0.0.1:9533" --enablewallet --wallet "wallet" --walletpassphrase "12345678" --walletautoinit --norpcauth --datadir "../shard4" --discoverpeersaddress "testnet-bootnode.incognito.org:9330" --norpcauth --rpclisten "0.0.0.0:4334" --rpcwslisten "127.0.0.1:14338" > ../shard4/log.txt 2> ../shard4/error_log.txt &
 fi
 if [ "$1" == "fullnode-mainnet" ]; then
-./incognito --testnet true --nodemode "relay" --externaladdress "127.0.0.1:9433" --enablewallet --wallet "wallet" --walletpassphrase "12345678" --walletautoinit --norpcauth --datadir "../mainnet/fullnode" --discoverpeersaddress "mainnet-bootnode.incognito.org:9330"
+GO111MODULE=on GETH_NAME=kovan.infura.io/v3/1138a1e99b154b10bae5c382ad894361 GETH_PROTOCOL=https GETH_PORT="" ./incognito --nodemode "relay" --externaladdress "127.0.0.1:9433" --enablewallet --wallet "wallet" --walletpassphrase "12345678" --walletautoinit --datadir "../mainnet/fullnode" --discoverpeersaddress "mainnet-bootnode.incognito.org:9330" --norpcauth --rpclisten "0.0.0.0:9334" --rpcwslisten "127.0.0.1:19334" > ../mainnet/log.txt 2> ../mainnet/error_log.txt &
 fi
 if [ "$1" == "fullnode-devnet" ]; then
 ./incognito --nodemode "relay" --relayshards "all" --listen "127.0.0.1:9433" --externaladdress "0.0.0.0:9433" --enablewallet --wallet "wallet" --walletpassphrase "12345678" --walletautoinit --testnet "true" --norpcauth --datadir "data/fullnode" --discoverpeersaddress "139.162.9.169:9331" --txpoolttl 3600 --rpcmaxclients 3000
