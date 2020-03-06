@@ -67,6 +67,7 @@ func (blockchain *BlockChain) VerifyPreSignBeaconBlock(beaconBlock *BeaconBlock,
 func (blockchain *BlockChain) InsertBeaconBlock(beaconBlock *BeaconBlock, isValidated bool) error {
 	blockchain.chainLock.Lock()
 	defer blockchain.chainLock.Unlock()
+	isValidated = true
 	currentBeaconBestState := GetBeaconBestState()
 	blockHash := beaconBlock.Header.Hash()
 	committeeChange := newCommitteeChange()
