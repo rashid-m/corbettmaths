@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/incdb"
@@ -71,6 +72,7 @@ func (blockchain *BlockChain) VerifyPreSignShardBlock(shardBlock *ShardBlock, sh
 func (blockchain *BlockChain) InsertShardBlock(shardBlock *ShardBlock, isValidated bool) error {
 	blockchain.chainLock.Lock()
 	defer blockchain.chainLock.Unlock()
+	startTime := time.Now()
 	shardID := shardBlock.Header.ShardID
 	blockHash := shardBlock.Header.Hash()
 	blockHeight := shardBlock.Header.Height
@@ -178,7 +180,7 @@ func (blockchain *BlockChain) InsertShardBlock(shardBlock *ShardBlock, isValidat
 	blockchain.removeOldDataAfterProcessingShardBlock(shardBlock, shardID)
 	go blockchain.config.PubSubManager.PublishMessage(pubsub.NewMessage(pubsub.NewShardblockTopic, shardBlock))
 	go blockchain.config.PubSubManager.PublishMessage(pubsub.NewMessage(pubsub.ShardBeststateTopic, tempShardBestState))
-	Logger.log.Infof("SHARD %+v | 🔗 Finish Insert new block %d, with hash %+v", shardID, blockHeight, blockHash)
+	Logger.log.Infof("SHARD %+v | 🔗 Finish Insert new block %d, with hash %+v, time %+v", shardID, blockHeight, blockHash, time.Since(startTime))
 	return nil
 }
 

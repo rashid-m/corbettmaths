@@ -68,6 +68,7 @@ func (blockchain *BlockChain) InsertBeaconBlock(beaconBlock *BeaconBlock, isVali
 	blockchain.chainLock.Lock()
 	defer blockchain.chainLock.Unlock()
 	isValidated = false
+	startTime := time.Now()
 	currentBeaconBestState := GetBeaconBestState()
 	blockHash := beaconBlock.Header.Hash()
 	committeeChange := newCommitteeChange()
@@ -223,7 +224,7 @@ func (blockchain *BlockChain) InsertBeaconBlock(beaconBlock *BeaconBlock, isVali
 		return err
 	}
 	blockchain.removeOldDataAfterProcessingBeaconBlock()
-	Logger.log.Infof("🔗 Finish Insert new Beacon Block %+v, with hash %+v \n", beaconBlock.Header.Height, *beaconBlock.Hash())
+	Logger.log.Infof("🔗 Finish Insert new Beacon Block %+v, with hash %+v, time %+v", beaconBlock.Header.Height, *beaconBlock.Hash(), time.Since(startTime))
 	if beaconBlock.Header.Height%50 == 0 {
 		BLogger.log.Debugf("Inserted beacon height: %d", beaconBlock.Header.Height)
 	}
