@@ -20,6 +20,8 @@ import (
 	"github.com/incognitochain/incognito-chain/common"
 )
 
+var startTime = time.Now()
+
 /*
 	// This function should receives block in consensus round
 	// It verify validity of this function before sign it
@@ -265,6 +267,11 @@ func (blockchain *BlockChain) InsertBeaconBlock(beaconBlock *BeaconBlock, isVali
 			newAllShardPending,
 		)
 	}
+
+	if beaconBlock.Header.Height%1000 == 0 {
+		BLogger.log.Infof("Benchmarking result, inserted beacon block %d, time elapsed %v mins", beaconBlock.Header.Height, time.Since(startTime).Minutes())
+	}
+
 	return nil
 }
 

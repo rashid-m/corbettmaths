@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/incognitochain/incognito-chain/database"
 
@@ -233,6 +234,11 @@ func (blockchain *BlockChain) InsertShardBlock(shardBlock *ShardBlock, isValidat
 	//	})
 	//}
 	Logger.log.Infof("SHARD %+v | 🔗 Finish Insert new block %d, with hash %+v", shardBlock.Header.ShardID, shardBlock.Header.Height, blockHash)
+
+	if shardBlock.Header.Height%1000 == 0 {
+		BLogger.log.Infof("Benchmarking result, inserted shard block %d, time elapsed %v mins", shardBlock.Header.Height, time.Since(startTime).Minutes())
+	}
+
 	return nil
 }
 
