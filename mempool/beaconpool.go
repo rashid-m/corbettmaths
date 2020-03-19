@@ -13,6 +13,9 @@ import (
 	"github.com/incognitochain/incognito-chain/pubsub"
 )
 
+var startTime = time.Now()
+var beaconBlockAdded = 0
+
 type BeaconPoolConfig struct {
 	MaxValidBlock   int
 	MaxPendingBlock int
@@ -177,6 +180,13 @@ func (beaconPool *BeaconPool) validateBeaconBlock(block *blockchain.BeaconBlock,
 	return nil
 }
 
+func countBeaconBlock() {
+	beaconBlockAdded++
+	if beaconBlockAdded%2000 == 0 {
+		Logger.log.Infof("Benchmarking result, pooled beacon block %d, time elapsed %v mins", beaconBlockAdded, time.Since(startTime).Minutes())
+	}
+}
+
 /*
  New block only become valid after
 	1. This block height is next block height ( latest valid height + 1)
@@ -201,6 +211,7 @@ func (beaconPool *BeaconPool) insertNewBeaconBlockToPool(block *blockchain.Beaco
 					Logger.log.Debugf("Condition 4: next block should point to this block")
 					beaconPool.validPool = append(beaconPool.validPool, block)
 					beaconPool.updateLatestBeaconState()
+					countBeaconBlock()
 					return true
 				} else {
 					Logger.log.Debugf("BPool: block is fork at height %v with hash %v (block hash should be %v)", block.Header.Height, blockHeader, preHash)
@@ -212,13 +223,16 @@ func (beaconPool *BeaconPool) insertNewBeaconBlockToPool(block *blockchain.Beaco
 				Logger.log.Debugf("no next block found then push to pending pool")
 				// no next block found then push to pending pool
 				beaconPool.pendingPool[block.Header.Height] = block
+				countBeaconBlock()
 			}
 		} else if len(beaconPool.pendingPool) < beaconPool.config.MaxPendingBlock {
 			beaconPool.pendingPool[block.Header.Height] = block
+			countBeaconBlock()
 			return false
 		}
 	} else {
 		beaconPool.pendingPool[block.Header.Height] = block
+		countBeaconBlock()
 		return false
 	}
 	return false

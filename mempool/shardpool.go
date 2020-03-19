@@ -3,15 +3,18 @@ package mempool
 import (
 	"errors"
 	"fmt"
-	lru "github.com/hashicorp/golang-lru"
-	"github.com/incognitochain/incognito-chain/blockchain"
-	"github.com/incognitochain/incognito-chain/common"
-	"github.com/incognitochain/incognito-chain/pubsub"
 	"sort"
 	"strconv"
 	"sync"
 	"time"
+
+	lru "github.com/hashicorp/golang-lru"
+	"github.com/incognitochain/incognito-chain/blockchain"
+	"github.com/incognitochain/incognito-chain/common"
+	"github.com/incognitochain/incognito-chain/pubsub"
 )
+
+var shardBlockAdded = 0
 
 type ShardPoolConfig struct {
 	MaxValidBlock   int
@@ -240,6 +243,13 @@ func (shardPool *ShardPool) PromotePendingPool() {
 	})
 }
 
+func countShardBlock() {
+	shardBlockAdded++
+	if shardBlockAdded%2000 == 0 {
+		Logger.log.Infof("Benchmarking result, pooled shard block %d, time elapsed %v mins", shardBlockAdded, time.Since(startTime).Minutes())
+	}
+}
+
 /*
 	Description:
 	In case we have two block at one height: Ex: 5A and 5B
@@ -262,6 +272,7 @@ func (shardPool *ShardPool) insertNewShardBlockToPool(block *blockchain.ShardBlo
 	// Condition 1
 	if block.Header.Height > blockchain.GetBeaconBestState().GetBestHeightOfShard(block.Header.ShardID) {
 		shardPool.pendingPool[block.Header.Height] = block
+		countShardBlock()
 		return false
 	}
 	// Condition 2
@@ -278,11 +289,13 @@ func (shardPool *ShardPool) insertNewShardBlockToPool(block *blockchain.ShardBlo
 				if preHash.IsEqual(&latestBlockHash) {
 					shardPool.validPool = append(shardPool.validPool, block)
 					shardPool.updateLatestShardState()
+					countShardBlock()
 					return true
 				} else {
 					// add new block to pending pool
 					if len(shardPool.pendingPool) < shardPool.config.MaxPendingBlock {
 						shardPool.pendingPool[block.Header.Height] = block
+						countShardBlock()
 					}
 					// delete latest block in pool
 					shardPool.validPool = shardPool.validPool[:len(shardPool.validPool)-1]
@@ -309,15 +322,18 @@ func (shardPool *ShardPool) insertNewShardBlockToPool(block *blockchain.ShardBlo
 				// if valid pool is empty then add block to valid pool
 			} else {
 				shardPool.validPool = append(shardPool.validPool, block)
+				countShardBlock()
 				shardPool.updateLatestShardState()
 				return true
 			}
 		} else if len(shardPool.pendingPool) < shardPool.config.MaxPendingBlock {
 			shardPool.pendingPool[block.Header.Height] = block
+			countShardBlock()
 			return false
 		}
 	} else if len(shardPool.pendingPool) < shardPool.config.MaxPendingBlock {
 		shardPool.pendingPool[block.Header.Height] = block
+		countShardBlock()
 		return false
 	}
 	return false
