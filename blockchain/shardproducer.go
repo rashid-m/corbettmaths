@@ -523,10 +523,15 @@ func (blockchain *BlockChain) generateInstruction(shardID byte, beaconHeight uin
 			minShardCommitteeSize = blockchain.BestState.Shard[shardID].MinShardCommitteeSize - NumberOfFixedBlockValidators
 		}
 		badProducersWithPunishment := blockchain.buildBadProducersWithPunishment(false, int(shardID), shardCommittee)
-		swapInstruction, shardPendingValidator, shardCommittee, err = CreateSwapAction(shardPendingValidator, shardCommittee, maxShardCommitteeSize, minShardCommitteeSize, shardID, producersBlackList, badProducersWithPunishment, blockchain.config.ChainParams.Offset, blockchain.config.ChainParams.SwapOffset)
-		if err != nil {
-			Logger.log.Error(err)
-			return instructions, shardPendingValidator, shardCommittee, err
+		//TODO: add condition here
+		if false {
+			swapInstruction, shardPendingValidator, shardCommittee = CreateSwapActionForKeyListV2(blockchain.config.GenesisParams, shardPendingValidator, shardCommittee, minShardCommitteeSize, shardID)
+		} else {
+			swapInstruction, shardPendingValidator, shardCommittee, err = CreateSwapAction(shardPendingValidator, shardCommittee, maxShardCommitteeSize, minShardCommitteeSize, shardID, producersBlackList, badProducersWithPunishment, blockchain.config.ChainParams.Offset, blockchain.config.ChainParams.SwapOffset)
+			if err != nil {
+				Logger.log.Error(err)
+				return instructions, shardPendingValidator, shardCommittee, err
+			}
 		}
 		//TODO: 0xmerman
 		//TODO: duybao fixed
