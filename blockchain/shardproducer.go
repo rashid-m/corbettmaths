@@ -523,8 +523,7 @@ func (blockchain *BlockChain) generateInstruction(shardID byte, beaconHeight uin
 			minShardCommitteeSize = blockchain.BestState.Shard[shardID].MinShardCommitteeSize - NumberOfFixedBlockValidators
 		}
 		badProducersWithPunishment := blockchain.buildBadProducersWithPunishment(false, int(shardID), shardCommittee)
-		//TODO: add condition here
-		if false {
+		if beaconHeight/blockchain.config.ChainParams.Epoch == blockchain.config.ChainParams.EpochBreakPointSwapNewKey {
 			swapInstruction, shardPendingValidator, shardCommittee = CreateSwapActionForKeyListV2(blockchain.config.GenesisParams, shardPendingValidator, shardCommittee, minShardCommitteeSize, shardID)
 		} else {
 			swapInstruction, shardPendingValidator, shardCommittee, err = CreateSwapAction(shardPendingValidator, shardCommittee, maxShardCommitteeSize, minShardCommitteeSize, shardID, producersBlackList, badProducersWithPunishment, blockchain.config.ChainParams.Offset, blockchain.config.ChainParams.SwapOffset)
