@@ -124,7 +124,7 @@ func (blockGenerator *BlockGenerator) NewBlockBeacon(round int, shardsToBeaconLi
 	//============End Build Body================
 	//============Update Beacon Best State================
 	// Process new block with beststate
-	err = beaconBestState.updateBeaconBestState(beaconBlock, blockGenerator.chain.config.ChainParams.Epoch, blockGenerator.chain.config.ChainParams.AssignOffset, blockGenerator.chain.config.ChainParams.RandomTime, newCommitteeChange())
+	err = beaconBestState.updateBeaconBestState(beaconBlock, blockGenerator.chain, newCommitteeChange())
 	if err != nil {
 		return nil, err
 	}
