@@ -251,7 +251,6 @@ func (serverObj *Server) NewServer(listenAddrs string, db incdb.Database, dbmp d
 			os.Exit(2)
 		}
 		randomClient = btc.NewBTCClient(cfg.BtcClientUsername, cfg.BtcClientPassword, cfg.BtcClientIP, cfg.BtcClientPort)
-		Logger.log.Infof("Init Bitcoin Core Client with IP %+v, Port %+v, Username %+v, Password %+v", cfg.BtcClientIP, cfg.BtcClientPort, cfg.BtcClientUsername, cfg.BtcClientPassword)
 	}
 	// Init block template generator
 	serverObj.blockgen, err = blockchain.NewBlockGenerator(serverObj.memPool, serverObj.blockChain, serverObj.shardToBeaconPool, serverObj.crossShardPool, cPendingTxs, cRemovedTxs)
