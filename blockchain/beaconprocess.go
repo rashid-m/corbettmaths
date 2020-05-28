@@ -932,7 +932,7 @@ func (beaconBestState *BeaconBestState) processInstruction(instruction []string,
 		}
 	}
 	if instruction[0] == SwapAction {
-		if beaconBestState.BeaconHeight/blockchain.config.ChainParams.Epoch == blockchain.config.ChainParams.EpochBreakPointSwapNewKey {
+		if common.IndexOfUint64(beaconBestState.BeaconHeight/blockchain.config.ChainParams.Epoch, blockchain.config.ChainParams.EpochBreakPointSwapNewKey) > -1 {
 			err := beaconBestState.processSwapInstructionForKeyListV2(instruction, committeeChange)
 			if err != nil {
 				return err, false, []incognitokey.CommitteePublicKey{}, []incognitokey.CommitteePublicKey{}

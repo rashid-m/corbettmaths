@@ -46,21 +46,21 @@ type Params struct {
 	ChainVersion                     string
 	AssignOffset                     int
 	BeaconHeightBreakPointBurnAddr   uint64
-	EpochBreakPointSwapNewKey        uint64
+	EpochBreakPointSwapNewKey        []uint64
 }
 
 type GenesisParams struct {
 	InitialIncognito                            []string // init tx for genesis block
 	FeePerTxKb                                  uint64
 	PreSelectBeaconNodeSerializedPubkey         []string
-	SelectBeaconNodeSerializedPubkeyV2          []string
+	SelectBeaconNodeSerializedPubkeyV2          map[uint64][]string
 	PreSelectBeaconNodeSerializedPaymentAddress []string
-	SelectBeaconNodeSerializedPaymentAddressV2  []string
+	SelectBeaconNodeSerializedPaymentAddressV2  map[uint64][]string
 	PreSelectBeaconNode                         []string
 	PreSelectShardNodeSerializedPubkey          []string
-	SelectShardNodeSerializedPubkeyV2           []string
+	SelectShardNodeSerializedPubkeyV2           map[uint64][]string
 	PreSelectShardNodeSerializedPaymentAddress  []string
-	SelectShardNodeSerializedPaymentAddressV2   []string
+	SelectShardNodeSerializedPaymentAddressV2   map[uint64][]string
 	PreSelectShardNode                          []string
 	ConsensusAlgorithm                          string
 }
@@ -119,7 +119,7 @@ func init() {
 		CheckForce:                     false,
 		ChainVersion:                   "version-chain-test.json",
 		BeaconHeightBreakPointBurnAddr: 250000,
-		EpochBreakPointSwapNewKey:      100000,
+		EpochBreakPointSwapNewKey:      TestnetReplaceCommitteeEpoch,
 	}
 	// END TESTNET
 	// FOR MAINNET
@@ -170,6 +170,6 @@ func init() {
 		CheckForce:                     false,
 		ChainVersion:                   "version-chain-main.json",
 		BeaconHeightBreakPointBurnAddr: 150500,
-		EpochBreakPointSwapNewKey:      100000,
+		EpochBreakPointSwapNewKey:      MainnetReplaceCommitteeEpoch,
 	}
 }

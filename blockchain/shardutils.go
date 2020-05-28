@@ -122,15 +122,16 @@ func CreateSwapAction(
 	return swapInstruction, newPendingValidator, newShardCommittees, nil
 }
 
-func CreateSwapActionForKeyListV2(
+func CreateShardSwapActionForKeyListV2(
 	genesisParam *GenesisParams,
 	pendingValidator []string,
 	shardCommittees []string,
 	minCommitteeSize int,
 	shardID byte,
+	epoch uint64,
 ) ([]string, []string, []string) {
 	newPendingValidator := pendingValidator
-	swapInstruction, newShardCommittees := GetShardSwapInstructionKeyListV2(genesisParam)
+	swapInstruction, newShardCommittees := GetShardSwapInstructionKeyListV2(genesisParam, epoch)
 	remainShardCommittees := shardCommittees[minCommitteeSize:]
 	return swapInstruction[shardID], newPendingValidator, append(newShardCommittees[shardID], remainShardCommittees...)
 }

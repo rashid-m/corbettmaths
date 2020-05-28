@@ -77,9 +77,9 @@ func CreateBeaconGenesisBlock(
 	return block
 }
 
-func GetBeaconSwapInstructionKeyListV2(genesisParams GenesisParams) []string {
-	newCommittees := genesisParams.SelectBeaconNodeSerializedPubkeyV2
+func GetBeaconSwapInstructionKeyListV2(genesisParams *GenesisParams, epoch uint64) ([]string, []string) {
+	newCommittees := genesisParams.SelectBeaconNodeSerializedPubkeyV2[epoch]
 	oldCommittees := genesisParams.PreSelectBeaconNodeSerializedPubkey
 	beaconSwapInstructionKeyListV2 := []string{SwapAction, strings.Join(newCommittees, ","), strings.Join(oldCommittees, ","), "beacon", ""}
-	return beaconSwapInstructionKeyListV2
+	return beaconSwapInstructionKeyListV2, newCommittees
 }

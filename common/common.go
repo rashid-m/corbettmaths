@@ -497,3 +497,12 @@ func FromHex(s string) []byte {
 // HexToHash sets byte representation of s to hash.
 // If b is larger than len(h), b will be cropped from the left.
 func HexToHash(s string) Hash { return BytesToHash(FromHex(s)) }
+
+func IndexOfUint64(target uint64, arr []uint64) int {
+	for i, v := range arr {
+		if v == target {
+			return i
+		}
+	}
+	return -1
+}
