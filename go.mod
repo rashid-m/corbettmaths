@@ -7,6 +7,7 @@ require (
 	github.com/0xsirrush/color v1.7.0
 	github.com/allegro/bigcache v1.2.1
 	github.com/aristanetworks/goarista v0.0.0-20190704150520-f44d68189fd7 // indirect
+	github.com/btcsuite/btcd v0.0.0-20190523000118-16327141da8c
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/deckarep/golang-set v1.7.1 // indirect
@@ -60,5 +61,5 @@ require (
 	google.golang.org/grpc v1.27.1
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc // indirect
-	stathat.com/c/consistent v1.0.0 // indirect
+	stathat.com/c/consistent v1.0.0
 )
