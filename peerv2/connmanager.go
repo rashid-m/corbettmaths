@@ -239,6 +239,8 @@ func (cm *ConnManager) keepHighwayConnection() {
 			Logger.Errorf("Failed refreshing highway: %v", err)
 			return currentHighway, err
 		}
+		Logger.Infof("Updated highway addresses: %+v", newHighway)
+		Logger.Infof("Chose new highway: %+v", newHighway)
 		return &newHighway, nil
 	}
 
