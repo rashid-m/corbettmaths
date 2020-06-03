@@ -14,7 +14,8 @@ import (
 )
 
 type AccountPub struct {
-	PaymentAddress     string
+	PaymentAddress string
+
 	CommitteePublicKey string
 	ValidatorKey       string
 }
