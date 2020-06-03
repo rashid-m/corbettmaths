@@ -28,8 +28,8 @@ const (
 	LowerBoundPercentForIncDAO    = 3
 	UpperBoundPercentForIncDAO    = 10
 	GetValidBlock                 = 20
-	TestRandom                    = true
-	NumberOfFixedBlockValidators  = 4
+	TestRandom                    = false
+	NumberOfFixedBlockValidators  = 22
 	BEACON_ID                     = -1         // CommitteeID of beacon chain, used for highway
 	ValidateTimeForSpamRequestTxs = 1581565837 // GMT: Thursday, February 13, 2020 3:50:37 AM. From this time, block will be checked spam request-reward tx
 	TransactionBatchSize          = 30
@@ -68,9 +68,9 @@ const (
 	MainnetMaxShardBlkCreation  = 10 * time.Second //second
 
 	//board and proposal parameters
-	MainnetBasicReward        = 1386666000                                   //1.386666 PRV
-	MainETHContractAddressStr = "0x0261DB5AfF8E5eC99fBc8FBBA5D4B9f8EcD44ec7" // v2-main - mainnet, branch master-temp-B-deploy, support erc20 with decimals > 18
-	//MainETHContractAddressStr               = "0x3c8ec94213f09A1575f773470830124dfb40042e"                                                              // v3-main - mainnet
+	MainnetBasicReward = 1386666000 //1.386666 PRV
+	//MainETHContractAddressStr = "0x0261DB5AfF8E5eC99fBc8FBBA5D4B9f8EcD44ec7" // v2-main - mainnet, branch master-temp-B-deploy, support erc20 with decimals > 18
+	MainETHContractAddressStr               = "0x3c8ec94213f09A1575f773470830124dfb40042e"                                                              // v3-main - mainnet
 	MainnetIncognitoDAOAddress              = "12S32fSyF4h8VxFHt4HfHvU1m9KHvBQsab5zp4TpQctmMdWuveXFH9KYWNemo7DRKvaBEvMgqm4XAuq1a1R4cNk2kfUfvXR3DdxCho3" // community fund
 	MainnetCentralizedWebsitePaymentAddress = "12Rvjw6J3FWY3YZ1eDZ5uTy6DTPjFeLhCK7SXgppjivg9ShX2RRq3s8pdoapnH8AMoqvUSqZm1Gqzw7rrKsNzRJwSK2kWbWf1ogy885"
 	// ------------- end Mainnet --------------------------------------
@@ -156,7 +156,7 @@ func init() {
 		panic(err)
 	}
 
-	var IsTestNet = true
+	var IsTestNet = false
 	if IsTestNet {
 		for i := 0; i < TestNetMinBeaconCommitteeSize; i++ {
 			PreSelectBeaconNodeTestnetSerializedPubkey = append(PreSelectBeaconNodeTestnetSerializedPubkey, keylist.Beacon[i].CommitteePublicKey)
