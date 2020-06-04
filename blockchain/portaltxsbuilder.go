@@ -60,6 +60,52 @@ func (blockGenerator *BlockGenerator) buildPortalRefundCustodianDepositTx(
 	return resTx, nil
 }
 
+func (blockGenerator *BlockGenerator) buildPortalRejectedTopUpWaitingPortingTx(
+	contentStr string,
+	producerPrivateKey *privacy.PrivateKey,
+	shardID byte,
+) (metadata.Transaction, error) {
+	Logger.log.Info("[buildPortalRejectedTopUpWaitingPortingTx] Starting...")
+	contentBytes := []byte(contentStr)
+	var topUpInfo metadata.PortalTopUpWaitingPortingRequestContent
+	err := json.Unmarshal(contentBytes, &topUpInfo)
+	if err != nil {
+		Logger.log.Errorf("ERROR: an error occurred while unmarshaling portal top up waiting porting content: %+v", err)
+		return nil, nil
+	}
+	if topUpInfo.ShardID != shardID {
+		return nil, nil
+	}
+
+	meta := metadata.NewPortalTopUpWaitingPortingResponse(
+		common.PortalLiquidationCustodianDepositRejectedChainStatus,
+		topUpInfo.TxReqID,
+		metadata.PortalTopUpWaitingPortingResponseMeta,
+	)
+
+	keyWallet, err := wallet.Base58CheckDeserialize(topUpInfo.IncogAddressStr)
+	if err != nil {
+		Logger.log.Errorf("ERROR: an error occurred while deserializing custodian address string: %+v", err)
+		return nil, nil
+	}
+	receiverAddr := keyWallet.KeySet.PaymentAddress
+
+	// the returned currency is PRV
+	resTx := new(transaction.Tx)
+	err = resTx.InitTxSalary(
+		topUpInfo.DepositedAmount,
+		&receiverAddr,
+		producerPrivateKey,
+		blockGenerator.chain.BestState.Shard[shardID].GetCopiedTransactionStateDB(),
+		meta,
+	)
+	if err != nil {
+		Logger.log.Errorf("ERROR: an error occurred while initializing refund top up waiting porting (normal) tx: %+v", err)
+		return nil, nil
+	}
+	return resTx, nil
+}
+
 func (blockGenerator *BlockGenerator) buildPortalLiquidationCustodianDepositReject(
 	contentStr string,
 	producerPrivateKey *privacy.PrivateKey,
@@ -83,6 +129,56 @@ func (blockGenerator *BlockGenerator) buildPortalLiquidationCustodianDepositReje
 		refundDeposit.IncogAddressStr,
 		refundDeposit.DepositedAmount,
 		metadata.PortalLiquidationCustodianDepositResponseMeta,
+	)
+
+	keyWallet, err := wallet.Base58CheckDeserialize(refundDeposit.IncogAddressStr)
+	if err != nil {
+		Logger.log.Errorf("ERROR: an error occurred while deserializing custodian liquidation address string: %+v", err)
+		return nil, nil
+	}
+	receiverAddr := keyWallet.KeySet.PaymentAddress
+
+	// the returned currency is PRV
+	resTx := new(transaction.Tx)
+	err = resTx.InitTxSalary(
+		refundDeposit.DepositedAmount,
+		&receiverAddr,
+		producerPrivateKey,
+		blockGenerator.chain.BestState.Shard[shardID].GetCopiedTransactionStateDB(),
+		meta,
+	)
+	if err != nil {
+		Logger.log.Errorf("ERROR: an error occurred while initializing refund contribution (normal) tx: %+v", err)
+		return nil, nil
+	}
+	//modify the type of the salary transaction
+	// resTx.Type = common.TxBlockProducerCreatedType
+	return resTx, nil
+}
+
+func (blockGenerator *BlockGenerator) buildPortalLiquidationCustodianDepositRejectV2(
+	contentStr string,
+	producerPrivateKey *privacy.PrivateKey,
+	shardID byte,
+) (metadata.Transaction, error) {
+	Logger.log.Info("[buildPortalLiquidationCustodianDepositRejectV2] Starting...")
+	contentBytes := []byte(contentStr)
+	var refundDeposit metadata.PortalLiquidationCustodianDepositContentV2
+	err := json.Unmarshal(contentBytes, &refundDeposit)
+	if err != nil {
+		Logger.log.Errorf("ERROR: an error occurred while unmarshaling portal liquidation custodian deposit content: %+v", err)
+		return nil, nil
+	}
+	if refundDeposit.ShardID != shardID {
+		return nil, nil
+	}
+
+	meta := metadata.NewPortalLiquidationCustodianDepositResponseV2(
+		common.PortalLiquidationCustodianDepositRejectedChainStatus,
+		refundDeposit.TxReqID,
+		refundDeposit.IncogAddressStr,
+		refundDeposit.DepositedAmount,
+		metadata.PortalLiquidationCustodianDepositResponseMetaV2,
 	)
 
 	keyWallet, err := wallet.Base58CheckDeserialize(refundDeposit.IncogAddressStr)
@@ -298,7 +394,6 @@ func (blockGenerator *BlockGenerator) buildPortalRedeemLiquidateExchangeRatesReq
 	return resTx, nil
 }
 
-
 // buildPortalRejectedRedeemRequestTx builds response tx for user request redeem tx with status "rejected"
 // mints ptoken along with redeem fee to return to user (ptoken that user burned)
 func (blockGenerator *BlockGenerator) buildPortalRejectedRedeemRequestTx(
@@ -346,7 +441,7 @@ func (blockGenerator *BlockGenerator) buildPortalRejectedRedeemRequestTx(
 	copy(propertyID[:], tokenID[:])
 	propID := common.Hash(propertyID)
 	tokenParams := &transaction.CustomTokenPrivacyParamTx{
-		PropertyID: propID.String(),
+		PropertyID:  propID.String(),
 		Amount:      receiveAmt,
 		TokenTxType: transaction.CustomTokenInit,
 		Receiver:    []*privacy.PaymentInfo{refundedPTokenPaymentInfo},
@@ -577,7 +672,6 @@ func (blockGenerator *BlockGenerator) buildPortalRefundPortingFeeTx(
 	return resTx, nil
 }
 
-
 // buildPortalRefundRedeemFromLiquidationTx builds response tx for user request redeem from liquidation pool tx with status "rejected"
 // mints ptoken to return to user (ptoken that user burned)
 func (blockGenerator *BlockGenerator) buildPortalRefundRedeemLiquidateExchangeRatesTx(
@@ -626,7 +720,7 @@ func (blockGenerator *BlockGenerator) buildPortalRefundRedeemLiquidateExchangeRa
 	copy(propertyID[:], tokenID[:])
 	propID := common.Hash(propertyID)
 	tokenParams := &transaction.CustomTokenPrivacyParamTx{
-		PropertyID: propID.String(),
+		PropertyID:  propID.String(),
 		Amount:      receiveAmt,
 		TokenTxType: transaction.CustomTokenInit,
 		Receiver:    []*privacy.PaymentInfo{refundedPTokenPaymentInfo},

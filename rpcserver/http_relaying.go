@@ -3,6 +3,7 @@ package rpcserver
 import (
 	"encoding/json"
 	"errors"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/common/base58"
 	"github.com/incognitochain/incognito-chain/metadata"
@@ -11,7 +12,6 @@ import (
 	"github.com/incognitochain/incognito-chain/rpcserver/jsonresult"
 	"github.com/incognitochain/incognito-chain/rpcserver/rpcservice"
 	"github.com/tendermint/tendermint/types"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 )
 
 func (httpServer *HttpServer) handleCreateRawTxWithRelayingBTCHeader(params interface{}, closeChan <-chan struct{}) (interface{}, *rpcservice.RPCError) {
@@ -55,16 +55,16 @@ func (httpServer *HttpServer) handleCreateRawTxWithRelayingHeader(
 		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, errors.New("metadata Header param is invalid"))
 	}
 
-	blockHeight, ok := data["BlockHeight"].(float64)
-	if !ok {
-		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, errors.New("metadata Header param is invalid"))
+	blockHeight, err := common.AssertAndConvertStrToNumber(data["BlockHeight"])
+	if err != nil {
+		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, err)
 	}
 
 	meta, _ := metadata.NewRelayingHeader(
 		metaType,
 		senderAddress,
 		header,
-		uint64(blockHeight),
+		blockHeight,
 	)
 
 	// create new param to build raw tx from param interface
@@ -157,9 +157,9 @@ func (httpServer *HttpServer) handleGetRelayingBNBHeaderByBlockHeight(params int
 	if !ok {
 		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, errors.New("Payload data is invalid"))
 	}
-	blockHeight, ok := data["BlockHeight"].(float64)
-	if !ok {
-		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, errors.New("Beacon height is invalid"))
+	blockHeight, err := common.AssertAndConvertStrToNumber(data["BlockHeight"])
+	if err != nil {
+		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, err)
 	}
 
 	block, err := httpServer.config.BlockChain.GetBNBBlockByHeight(int64(blockHeight))
