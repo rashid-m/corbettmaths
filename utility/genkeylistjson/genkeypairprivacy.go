@@ -51,11 +51,12 @@ func main() {
 		privAddr := child.Base58CheckSerialize(wallet.PriKeyType)
 		paymentAddress := child.Base58CheckSerialize(wallet.PaymentAddressType)
 
+		committeeValidatorKeyByte := common.HashB(common.HashB(child.KeySet.PrivateKey)) // old validator key
 		if len(saltForvalidatorKey) > 0 {
-			child.KeySet.PrivateKey = append(child.KeySet.PrivateKey, saltForvalidatorKey...)
+			committeeValidatorKeyByte = append(committeeValidatorKeyByte, saltForvalidatorKey...)
+			committeeValidatorKeyByte = common.HashB(common.HashB(committeeValidatorKeyByte))
 		}
 
-		committeeValidatorKeyByte := common.HashB(common.HashB(child.KeySet.PrivateKey))
 		committeeValidatorKeyBase58 := base58.Base58Check{}.Encode(committeeValidatorKeyByte, 0x0)
 		committeeKeyStr, _ := incognitokey.NewCommitteeKeyFromSeed(committeeValidatorKeyByte, child.KeySet.PaymentAddress.Pk)
 		committeeKey, _ := incognitokey.CommitteeKeyListToString([]incognitokey.CommitteePublicKey{committeeKeyStr})
@@ -86,10 +87,12 @@ func main() {
 		i++
 		privAddr := child.Base58CheckSerialize(wallet.PriKeyType)
 		paymentAddress := child.Base58CheckSerialize(wallet.PaymentAddressType)
+
+		validatorKeyBytes := common.HashB(common.HashB(child.KeySet.PrivateKey)) // old validator key
 		if len(saltForvalidatorKey) > 0 {
-			child.KeySet.PrivateKey = append(child.KeySet.PrivateKey, saltForvalidatorKey...)
+			validatorKeyBytes = append(validatorKeyBytes, saltForvalidatorKey...)
+			validatorKeyBytes = common.HashB(common.HashB(validatorKeyBytes))
 		}
-		validatorKeyBytes := common.HashB(common.HashB(child.KeySet.PrivateKey))
 		validatorKeyBase58 := base58.Base58Check{}.Encode(validatorKeyBytes, 0x0)
 		committeeKeyStr, _ := incognitokey.NewCommitteeKeyFromSeed(validatorKeyBytes, child.KeySet.PaymentAddress.Pk)
 		committeeKey, _ := incognitokey.CommitteeKeyListToString([]incognitokey.CommitteePublicKey{committeeKeyStr})
