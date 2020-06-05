@@ -51,16 +51,19 @@ func GetShardSwapInstructionKeyListV2(genesisParams *GenesisParams, epoch uint64
 	allShardSwapInstructionKeyListV2 := make(map[byte][]string)
 	allShardNewKeyListV2 := make(map[byte][]string)
 	selectShardNodeSerializedPubkeyV2 := genesisParams.SelectShardNodeSerializedPubkeyV2[epoch]
+	selectShardNodeSerializedPaymentAddressV2 := genesisParams.SelectShardNodeSerializedPaymentAddressV2[epoch]
 	preSelectShardNodeSerializedPubkey := genesisParams.PreSelectShardNodeSerializedPubkey
 	shardCommitteeSize := MainNetMinShardCommitteeSize
 	for i := 0; i < MainNetActiveShards; i++ {
 		shardID := byte(i)
 		newCommittees := selectShardNodeSerializedPubkeyV2[:shardCommitteeSize]
 		oldCommittees := preSelectShardNodeSerializedPubkey[:shardCommitteeSize]
-		shardSwapInstructionKeyListV2 := []string{SwapAction, strings.Join(newCommittees, ","), strings.Join(oldCommittees, ","), "shard", strconv.Itoa(i)}
+		newRewardReceiver := selectShardNodeSerializedPaymentAddressV2[:shardCommitteeSize]
+		shardSwapInstructionKeyListV2 := []string{SwapAction, strings.Join(newCommittees, ","), strings.Join(oldCommittees, ","), "shard", strconv.Itoa(i), strings.Join(newRewardReceiver, ",")}
 		allShardNewKeyListV2[shardID] = newCommittees
 		selectShardNodeSerializedPubkeyV2 = selectShardNodeSerializedPubkeyV2[shardCommitteeSize:]
 		preSelectShardNodeSerializedPubkey = preSelectShardNodeSerializedPubkey[shardCommitteeSize:]
+		selectShardNodeSerializedPaymentAddressV2 = selectShardNodeSerializedPaymentAddressV2[shardCommitteeSize:]
 		allShardSwapInstructionKeyListV2[shardID] = shardSwapInstructionKeyListV2
 	}
 	return allShardSwapInstructionKeyListV2, allShardNewKeyListV2

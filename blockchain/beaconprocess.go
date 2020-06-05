@@ -1140,22 +1140,26 @@ func (beaconBestState *BeaconBestState) processInstruction(instruction []string,
 
 func (beaconBestState *BeaconBestState) processSwapInstructionForKeyListV2(instruction []string, committeeChange *committeeChange) error {
 	if instruction[0] == SwapAction {
-		inPublickeys := strings.Split(instruction[1], ",")
-		inPublickeyStructs, err := incognitokey.CommitteeBase58KeyListToStruct(inPublickeys)
+		inPublicKeys := strings.Split(instruction[1], ",")
+		inPublicKeyStructs, err := incognitokey.CommitteeBase58KeyListToStruct(inPublicKeys)
 		if err != nil {
 			return NewBlockChainError(UnExpectedError, err)
 		}
-		outPublickeys := strings.Split(instruction[2], ",")
-		outPublickeyStructs, err := incognitokey.CommitteeBase58KeyListToStruct(outPublickeys)
+		outPublicKeys := strings.Split(instruction[2], ",")
+		outPublicKeyStructs, err := incognitokey.CommitteeBase58KeyListToStruct(outPublicKeys)
 		if err != nil {
-			if len(outPublickeys) != 0 {
+			if len(outPublicKeys) != 0 {
 				return NewBlockChainError(UnExpectedError, err)
 			}
 		}
-		if len(inPublickeys) != len(outPublickeys) {
-			return NewBlockChainError(ProcessSwapInstructionError, fmt.Errorf("length new committee %+v, length out committee %+v", len(inPublickeys), len(outPublickeys)))
+		inRewardReceiver := strings.Split(instruction[5], ",")
+		if len(inPublicKeys) != len(outPublicKeys) {
+			return NewBlockChainError(ProcessSwapInstructionError, fmt.Errorf("length new committee %+v, length out committee %+v", len(inPublicKeys), len(outPublicKeys)))
 		}
-		removedCommittee := len(inPublickeys)
+		if len(inPublicKeys) != len(inRewardReceiver) {
+			return NewBlockChainError(ProcessSwapInstructionError, fmt.Errorf("length new committee %+v, new reward receiver %+v", len(inPublicKeys), len(inRewardReceiver)))
+		}
+		removedCommittee := len(inPublicKeys)
 		if instruction[3] == "shard" {
 			temp, err := strconv.Atoi(instruction[4])
 			if err != nil {
@@ -1163,17 +1167,23 @@ func (beaconBestState *BeaconBestState) processSwapInstructionForKeyListV2(instr
 			}
 			shardID := byte(temp)
 			// update shard pending validator
-			committeeChange.shardCommitteeRemoved[shardID] = append(committeeChange.shardCommitteeRemoved[shardID], outPublickeyStructs...)
+			committeeChange.shardCommitteeRemoved[shardID] = append(committeeChange.shardCommitteeRemoved[shardID], outPublicKeyStructs...)
 			// add new public key to committees
-			committeeChange.shardCommitteeAdded[shardID] = append(committeeChange.shardCommitteeAdded[shardID], inPublickeyStructs...)
+			committeeChange.shardCommitteeAdded[shardID] = append(committeeChange.shardCommitteeAdded[shardID], inPublicKeyStructs...)
 			remainedShardCommittees := beaconBestState.ShardCommittee[shardID][removedCommittee:]
-			beaconBestState.ShardCommittee[shardID] = append(inPublickeyStructs, remainedShardCommittees...)
+			beaconBestState.ShardCommittee[shardID] = append(inPublicKeyStructs, remainedShardCommittees...)
 		} else if instruction[3] == "beacon" {
-			committeeChange.beaconCommitteeRemoved = append(committeeChange.beaconCommitteeRemoved, outPublickeyStructs...)
+			committeeChange.beaconCommitteeRemoved = append(committeeChange.beaconCommitteeRemoved, outPublicKeyStructs...)
 			// add new public key to committees
-			committeeChange.beaconCommitteeAdded = append(committeeChange.beaconCommitteeAdded, inPublickeyStructs...)
+			committeeChange.beaconCommitteeAdded = append(committeeChange.beaconCommitteeAdded, inPublicKeyStructs...)
 			remainedBeaconCommittees := beaconBestState.BeaconCommittee[removedCommittee:]
-			beaconBestState.BeaconCommittee = append(inPublickeyStructs, remainedBeaconCommittees...)
+			beaconBestState.BeaconCommittee = append(inPublicKeyStructs, remainedBeaconCommittees...)
+		}
+		for i := 0; i < removedCommittee; i++ {
+			delete(beaconBestState.AutoStaking, outPublicKeys[i])
+			delete(beaconBestState.RewardReceiver, outPublicKeyStructs[i].GetIncKeyBase58())
+			beaconBestState.AutoStaking[inPublicKeys[i]] = false
+			beaconBestState.RewardReceiver[inPublicKeyStructs[i].GetIncKeyBase58()] = inRewardReceiver[i]
 		}
 	}
 	return nil
