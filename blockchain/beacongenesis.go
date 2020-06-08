@@ -13,7 +13,7 @@ func CreateBeaconGenesisBlock(
 	version int,
 	net uint16,
 	genesisBlockTime string,
-	genesisParams GenesisParams,
+	genesisParams *GenesisParams,
 ) *BeaconBlock {
 	inst := [][]string{}
 	shardAutoStaking := []string{}

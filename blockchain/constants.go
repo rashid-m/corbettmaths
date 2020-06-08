@@ -138,6 +138,8 @@ var SelectShardNodeTestnetSerializedPubkeyV2 = make(map[uint64][]string)
 var SelectShardNodeTestnetSerializedPaymentAddressV2 = make(map[uint64][]string)
 var TestnetReplaceCommitteeEpoch = []uint64{}
 
+var IsTestNet = true
+
 func init() {
 	if len(os.Args) > 0 && (strings.Contains(os.Args[0], "test") || strings.Contains(os.Args[0], "Test")) {
 		return
@@ -185,7 +187,6 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	var IsTestNet = true
 	if IsTestNet {
 		for i := 0; i < TestNetMinBeaconCommitteeSize; i++ {
 			PreSelectBeaconNodeTestnetSerializedPubkey = append(PreSelectBeaconNodeTestnetSerializedPubkey, keylist.Beacon[i].CommitteePublicKey)
@@ -213,6 +214,7 @@ func init() {
 			}
 		}
 	} else {
+		GenesisParam = genesisParamsMainnetNew
 		for i := 0; i < MainNetMinBeaconCommitteeSize; i++ {
 			PreSelectBeaconNodeMainnetSerializedPubkey = append(PreSelectBeaconNodeMainnetSerializedPubkey, keylist.Beacon[i].CommitteePublicKey)
 			PreSelectBeaconNodeMainnetSerializedPaymentAddress = append(PreSelectBeaconNodeMainnetSerializedPaymentAddress, keylist.Beacon[i].PaymentAddress)

@@ -334,14 +334,12 @@ func (serverObj *Server) NewServer(listenAddrs string, db incdb.Database, dbmp d
 		RandomClient:    randomClient,
 		ConsensusEngine: serverObj.consensusEngine,
 		Highway:         serverObj.highway,
+		GenesisParams:   blockchain.GenesisParam,
 	})
 	if err != nil {
 		return err
 	}
 	serverObj.blockChain.InitChannelBlockchain(cRemovedTxs)
-	if err != nil {
-		return err
-	}
 	//init beacon pol
 	mempool.InitBeaconPool(serverObj.pusubManager)
 	//init shard pool

@@ -68,9 +68,13 @@ type GenesisParams struct {
 var ChainTestParam = Params{}
 var ChainMainParam = Params{}
 
+var genesisParamsTestnetNew *GenesisParams
+var genesisParamsMainnetNew *GenesisParams
+var GenesisParam *GenesisParams
+
 // FOR TESTNET
 func init() {
-	var genesisParamsTestnetNew = GenesisParams{
+	genesisParamsTestnetNew = &GenesisParams{
 		PreSelectBeaconNodeSerializedPubkey:         PreSelectBeaconNodeTestnetSerializedPubkey,
 		PreSelectBeaconNodeSerializedPaymentAddress: PreSelectBeaconNodeTestnetSerializedPaymentAddress,
 		PreSelectShardNodeSerializedPubkey:          PreSelectShardNodeTestnetSerializedPubkey,
@@ -88,7 +92,7 @@ func init() {
 		Name:                   TestnetName,
 		Net:                    Testnet,
 		DefaultPort:            TestnetDefaultPort,
-		GenesisParams:          &genesisParamsTestnetNew,
+		GenesisParams:          genesisParamsTestnetNew,
 		MaxShardCommitteeSize:  TestNetShardCommitteeSize,     //TestNetShardCommitteeSize,
 		MinShardCommitteeSize:  TestNetMinShardCommitteeSize,  //TestNetShardCommitteeSize,
 		MaxBeaconCommitteeSize: TestNetBeaconCommitteeSize,    //TestNetBeaconCommitteeSize,
@@ -123,7 +127,7 @@ func init() {
 	}
 	// END TESTNET
 	// FOR MAINNET
-	var genesisParamsMainnetNew = GenesisParams{
+	genesisParamsMainnetNew = &GenesisParams{
 		PreSelectBeaconNodeSerializedPubkey:         PreSelectBeaconNodeMainnetSerializedPubkey,
 		PreSelectBeaconNodeSerializedPaymentAddress: PreSelectBeaconNodeMainnetSerializedPaymentAddress,
 		PreSelectShardNodeSerializedPubkey:          PreSelectShardNodeMainnetSerializedPubkey,
@@ -139,7 +143,7 @@ func init() {
 		Name:                   MainetName,
 		Net:                    Mainnet,
 		DefaultPort:            MainnetDefaultPort,
-		GenesisParams:          &genesisParamsMainnetNew,
+		GenesisParams:          genesisParamsMainnetNew,
 		MaxShardCommitteeSize:  MainNetShardCommitteeSize, //MainNetShardCommitteeSize,
 		MinShardCommitteeSize:  MainNetMinShardCommitteeSize,
 		MaxBeaconCommitteeSize: MainNetBeaconCommitteeSize, //MainNetBeaconCommitteeSize,
@@ -171,5 +175,10 @@ func init() {
 		ChainVersion:                   "version-chain-main.json",
 		BeaconHeightBreakPointBurnAddr: 150500,
 		EpochBreakPointSwapNewKey:      MainnetReplaceCommitteeEpoch,
+	}
+	if IsTestNet {
+		GenesisParam = genesisParamsTestnetNew
+	} else {
+		GenesisParam = genesisParamsMainnetNew
 	}
 }
