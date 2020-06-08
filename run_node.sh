@@ -68,7 +68,7 @@ if [ "$1" == "beacon-3" ]; then
 fi
 # Beacon
 if [ "$1" == "beacon-new-0" ]; then
-./incognito --discoverpeersaddress "0.0.0.0:9330" --privatekey "112t8sSj637mhpaJUboUEjkXsEUQm8q82T6kND3mWtNwig71qX2aFeZegWYsLVtyxBWdiZMBoNkdJ1MZYAcWetUP8DjYFnUac4vW7kzHfYsc" --nodemode "auto" --datadir "data/beacon-0" --listen "0.0.0.0:9460" --externaladdress "0.0.0.0:9460" --norpcauth --rpclisten "0.0.0.0:9360"
+./incognito --discoverpeersaddress "0.0.0.0:9330" --privatekey "112t8sSijugr8azxAiHMWS9rA22grKDv5o7AEXQ9datpT1V7N5FLHiJMjvfVnXcitL3fpj35Xt5DNnBq8iFq618X31nCgn2RjrYx5tZZWCtj" --nodemode "auto" --datadir "data/beacon-0" --listen "0.0.0.0:9460" --externaladdress "0.0.0.0:9460" --norpcauth --rpclisten "0.0.0.0:9360"
 fi
 if [ "$1" == "beacon-new-1" ]; then
 ./incognito --discoverpeersaddress "0.0.0.0:9330" --privatekey "112t8sSjSEck5J5RKWGWurVfigruYDxEzjjVPqHaTRJ57YFNo7gXBH8onUQxtdpoyFnBZrLhfGWQ4k4MNadwa6F7qYwcuFLW9R1VxTfN7q4d" --nodemode "auto" --datadir "data/beacon-1" --listen "0.0.0.0:9461" --externaladdress "0.0.0.0:9461" --norpcauth --rpclisten "0.0.0.0:9361"
@@ -77,7 +77,7 @@ if [ "$1" == "beacon-new-2" ]; then
 ./incognito --discoverpeersaddress "0.0.0.0:9330" --privatekey "112t8sSjkAqVJi4KkbCS75GYrsag7QZYP7FTPRfZ63D1AJgzfmdHnE9sbpdJV4Kx5tN9MgbqbRYDgzER2xpgsxrHvWxNgTHHrghYwLJLfe2R" --nodemode "auto" --datadir "data/beacon-2" --listen "0.0.0.0:9462" --externaladdress "0.0.0.0:9462" --norpcauth --rpclisten "0.0.0.0:9362"
 fi
 if [ "$1" == "beacon-new-3" ]; then
-./incognito --discoverpeersaddress "0.0.0.0:9330" --privatekey "112t8sSjz8HjHfbPyNUhzR4z3GatLXJXPb5K5BcWbSX17rrBNJtSJsEKjquWJpxgWtn7ZS3CZFdgAmcsZw5H1yz24BB8KqPatgDQAh9vf8Ur" --nodemode "auto" --datadir "data/beacon-3" --listen "0.0.0.0:9463" --externaladdress "0.0.0.0:9463" --norpcauth --rpclisten "0.0.0.0:9363"
+./incognito --discoverpeersaddress "0.0.0.0:9330" --privatekey "112t8sSj637mhpaJUboUEjkXsEUQm8q82T6kND3mWtNwig71qX2aFeZegWYsLVtyxBWdiZMBoNkdJ1MZYAcWetUP8DjYFnUac4vW7kzHfYsc" --nodemode "auto" --datadir "data/beacon-3" --listen "0.0.0.0:9463" --externaladdress "0.0.0.0:9463" --norpcauth --rpclisten "0.0.0.0:9363"
 fi
 # FullNode testnet
 if [ "$1" == "fullnode-testnet" ]; then
