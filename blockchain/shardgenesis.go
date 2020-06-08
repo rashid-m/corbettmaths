@@ -47,14 +47,14 @@ func CreateShardGenesisBlock(
 	return block
 }
 
-func GetShardSwapInstructionKeyListV2(genesisParams *GenesisParams, epoch uint64) (map[byte][]string, map[byte][]string) {
+func GetShardSwapInstructionKeyListV2(genesisParams *GenesisParams, epoch uint64, minCommitteeSize int, activeShard int) (map[byte][]string, map[byte][]string) {
 	allShardSwapInstructionKeyListV2 := make(map[byte][]string)
 	allShardNewKeyListV2 := make(map[byte][]string)
 	selectShardNodeSerializedPubkeyV2 := genesisParams.SelectShardNodeSerializedPubkeyV2[epoch]
 	selectShardNodeSerializedPaymentAddressV2 := genesisParams.SelectShardNodeSerializedPaymentAddressV2[epoch]
 	preSelectShardNodeSerializedPubkey := genesisParams.PreSelectShardNodeSerializedPubkey
-	shardCommitteeSize := MainNetMinShardCommitteeSize
-	for i := 0; i < MainNetActiveShards; i++ {
+	shardCommitteeSize := minCommitteeSize
+	for i := 0; i < activeShard; i++ {
 		shardID := byte(i)
 		newCommittees := selectShardNodeSerializedPubkeyV2[:shardCommitteeSize]
 		oldCommittees := preSelectShardNodeSerializedPubkey[:shardCommitteeSize]

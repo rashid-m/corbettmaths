@@ -14,6 +14,18 @@ fi
 if [ "$1" == "shard0-3" ]; then
 ./incognito --discoverpeersaddress "0.0.0.0:9330" --privatekey "112t8rnY42xRqJghQX3zvhgEa2ZJBwSzJ46SXyVQEam1yNpN4bfAqJwh1SsobjHAz8wwRvwnqJBfxrbwUuTxqgEbuEE8yMu6F14QmwtwyM43" --nodemode "auto" --datadir "data/shard0-3" --listen "0.0.0.0:9437" --externaladdress "0.0.0.0:9437" --norpcauth --rpclisten "0.0.0.0:9337" 
 fi
+if [ "$1" == "shard0-new-0" ]; then
+./incognito --discoverpeersaddress "0.0.0.0:9330" --privatekey "112t8rospAEaouNQgnK8vAAJGzH6ysLAGeZGqmZ5RJTT7CrF1zK8zwqVqx4DEdoD6MDTNiSK9W1vbZXtVe7vqvfEuf6LpuBbUiHvvkfF9L3X" --nodemode "auto" --datadir "data/shard0-0" --listen "0.0.0.0:9434" --externaladdress "0.0.0.0:9434" --norpcauth --rpclisten "0.0.0.0:9334" --rpcwslisten "0.0.0.0:19334"
+fi
+if [ "$1" == "shard0-new-1" ]; then
+./incognito --discoverpeersaddress "0.0.0.0:9330" --privatekey "112t8rs4QMxRdQLLyG7b5ifeBwH39TuZU92UuTXHynDKVgtE366Jd6qs99gj6gKtz46ad5NKXbaJ2UyXfxbjCouhtN6Es8ve5yyQVyEtgXod" --nodemode "auto" --datadir "data/shard0-1" --listen "0.0.0.0:9435" --externaladdress "0.0.0.0:9435" --norpcauth --rpclisten "0.0.0.0:9335" --rpcwslisten "0.0.0.0:19335"
+fi
+if [ "$1" == "shard0-new-2" ]; then
+./incognito --discoverpeersaddress "0.0.0.0:9330" --privatekey "112t8rtB7mXUvqSqgGJZTa84JwUJyruLXNYwrypD98t8UkAGxhBhhs6P696Z7iZ1WxdhWEFKeDbEkR5PdXNf4V8CRwmszhjUAU6AqyXQ6ME7" --nodemode "auto" --datadir "data/shard0-2" --listen "0.0.0.0:9436" --externaladdress "0.0.0.0:9436" --norpcauth --rpclisten "0.0.0.0:9336"
+fi
+if [ "$1" == "shard0-new-3" ]; then
+./incognito --discoverpeersaddress "0.0.0.0:9330" --privatekey "112t8rwXq7wh46QCmZUuqUTaQwbrXi7mvZnPayhjaUqa2MCnGbXRxHQhxyShfRLpvQzUzqqmDGMqfmLR6R2WayyyBhXU1b6Hhz8CnZVPTBG7" --nodemode "auto" --datadir "data/shard0-3" --listen "0.0.0.0:9437" --externaladdress "0.0.0.0:9437" --norpcauth --rpclisten "0.0.0.0:9337"
+fi
 # Shard 1
 if [ "$1" == "shard1-0" ]; then
 ./incognito --discoverpeersaddress "0.0.0.0:9330" --privatekey "112t8rnXBPJQWJTyPdzWsfsUCFTDhcas3y2MYsauKo66euh1udG8dSh2ZszSbfqHwCpYHPRSpFTxYkUcVa619XUM6DjdV7FfUWvYoziWE2Bm" --nodemode "auto" --datadir "data/shard1-0" --listen "0.0.0.0:9438" --externaladdress "0.0.0.0:9438" --norpcauth --rpclisten "0.0.0.0:9338" --rpcwslisten "127.0.0.1:19338" 
