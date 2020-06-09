@@ -932,7 +932,7 @@ func (beaconBestState *BeaconBestState) processInstruction(instruction []string,
 		}
 	}
 	if instruction[0] == SwapAction {
-		if common.IndexOfUint64(beaconBestState.BeaconHeight/blockchain.config.ChainParams.Epoch, blockchain.config.ChainParams.EpochBreakPointSwapNewKey) > -1 || len(instruction) == 6 {
+		if common.IndexOfUint64(beaconBestState.BeaconHeight/blockchain.config.ChainParams.Epoch, blockchain.config.ChainParams.EpochBreakPointSwapNewKey) > -1 || len(instruction) == 7 {
 			err := beaconBestState.processSwapInstructionForKeyListV2(instruction, committeeChange)
 			if err != nil {
 				return err, false, []incognitokey.CommitteePublicKey{}, []incognitokey.CommitteePublicKey{}
@@ -1155,7 +1155,7 @@ func (beaconBestState *BeaconBestState) processSwapInstructionForKeyListV2(instr
 				return NewBlockChainError(UnExpectedError, err)
 			}
 		}
-		inRewardReceiver := strings.Split(instruction[5], ",")
+		inRewardReceiver := strings.Split(instruction[6], ",")
 		if len(inPublicKeys) != len(outPublicKeys) {
 			return NewBlockChainError(ProcessSwapInstructionError, fmt.Errorf("length new committee %+v, length out committee %+v", len(inPublicKeys), len(outPublicKeys)))
 		}

@@ -59,7 +59,7 @@ func GetShardSwapInstructionKeyListV2(genesisParams *GenesisParams, epoch uint64
 		newCommittees := selectShardNodeSerializedPubkeyV2[:shardCommitteeSize]
 		oldCommittees := preSelectShardNodeSerializedPubkey[:shardCommitteeSize]
 		newRewardReceiver := selectShardNodeSerializedPaymentAddressV2[:shardCommitteeSize]
-		shardSwapInstructionKeyListV2 := []string{SwapAction, strings.Join(newCommittees, ","), strings.Join(oldCommittees, ","), "shard", strconv.Itoa(i), strings.Join(newRewardReceiver, ",")}
+		shardSwapInstructionKeyListV2 := []string{SwapAction, strings.Join(newCommittees, ","), strings.Join(oldCommittees, ","), "shard", strconv.Itoa(i), "", strings.Join(newRewardReceiver, ",")}
 		allShardNewKeyListV2[shardID] = newCommittees
 		selectShardNodeSerializedPubkeyV2 = selectShardNodeSerializedPubkeyV2[shardCommitteeSize:]
 		preSelectShardNodeSerializedPubkey = preSelectShardNodeSerializedPubkey[shardCommitteeSize:]
