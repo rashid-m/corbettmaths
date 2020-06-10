@@ -1043,7 +1043,7 @@ func (blockchain *BlockChain) processStoreShardBlock(shardBlock *ShardBlock, com
 		if common.IndexOfUint64(shardBlock.Header.BeaconHeight/blockchain.config.ChainParams.Epoch, blockchain.config.ChainParams.EpochBreakPointSwapNewKey) > -1 {
 			for _, instruction := range shardBlock.Body.Instructions {
 				if instruction[0] == SwapAction {
-					inRewardReceiver := strings.Split(instruction[5], ",")
+					inRewardReceiver := strings.Split(instruction[6], ",")
 					outPublicKeys := strings.Split(instruction[2], ",")
 					outPublicKeyStructs, _ := incognitokey.CommitteeBase58KeyListToStruct(outPublicKeys)
 					inPublicKeys := strings.Split(instruction[1], ",")
