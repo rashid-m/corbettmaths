@@ -863,7 +863,7 @@ func (shardBestState *ShardBestState) processShardBlockInstructionForKeyListV2(b
 			if err != nil {
 				return err
 			}
-			inRewardReceiver := strings.Split(instruction[5], ",")
+			inRewardReceiver := strings.Split(instruction[6], ",")
 			if len(inPublicKeys) != len(outPublicKeys) {
 				return NewBlockChainError(ProcessSwapInstructionError, fmt.Errorf("length new committee %+v, length out committee %+v", len(inPublicKeys), len(outPublicKeys)))
 			}
