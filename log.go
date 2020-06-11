@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	relaying "github.com/incognitochain/incognito-chain/relaying/bnb"
+	btcRelaying "github.com/incognitochain/incognito-chain/relaying/btc"
 	"github.com/incognitochain/incognito-chain/dataaccessobject"
 	"os"
 	"path/filepath"
@@ -56,8 +58,10 @@ var (
 	metadataLogger         = backendLog.Logger("Metadata log", false)
 	trieLogger             = backendLog.Logger("Trie log", false)
 	peerv2Logger           = backendLog.Logger("Peerv2 log", false)
+	relayingLogger         = backendLog.Logger("Relaying log", false)
 	wrapperLogger          = backendLog.Logger("Wrapper log", false)
 	daov2Logger            = backendLog.Logger("DAO log", false)
+	btcRelayingLogger      = backendLog.Logger("BTC relaying log", false)
 )
 
 // logWriter implements an io.Writer that outputs to both standard output and
@@ -96,9 +100,10 @@ func init() {
 	metadata.Logger.Init(metadataLogger)
 	trie.Logger.Init(trieLogger)
 	peerv2.Logger.Init(peerv2Logger)
+	relaying.Logger.Init(relayingLogger)
 	wrapper.Logger.Init(wrapperLogger)
 	dataaccessobject.Logger.Init(daov2Logger)
-
+	btcRelaying.Logger.Init(btcRelayingLogger)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
@@ -126,6 +131,7 @@ var subsystemLoggers = map[string]common.Logger{
 	"TRIE":              trieLogger,
 	"PEERV2":            peerv2Logger,
 	"DAO":               daov2Logger,
+	"BTCRELAYING":       btcRelayingLogger,
 }
 
 // initLogRotator initializes the logging rotater to write logs to logFile and

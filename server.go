@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/incognitochain/incognito-chain/dataaccessobject/rawdbv2"
+	bnbrelaying "github.com/incognitochain/incognito-chain/relaying/bnb"
 	"io/ioutil"
 	"log"
 	"net"
@@ -40,6 +41,7 @@ import (
 	"github.com/incognitochain/incognito-chain/netsync"
 	"github.com/incognitochain/incognito-chain/peer"
 	"github.com/incognitochain/incognito-chain/pubsub"
+	btcrelaying "github.com/incognitochain/incognito-chain/relaying/btc"
 	"github.com/incognitochain/incognito-chain/rpcserver"
 	"github.com/incognitochain/incognito-chain/transaction"
 	"github.com/incognitochain/incognito-chain/wallet"
@@ -189,7 +191,16 @@ func (serverObj *Server) setupRPCWsListeners() ([]net.Listener, error) {
 /*
 NewServer - create server object which control all process of node
 */
-func (serverObj *Server) NewServer(listenAddrs string, db incdb.Database, dbmp databasemp.DatabaseInterface, chainParams *blockchain.Params, protocolVer string, interrupt <-chan struct{}) error {
+func (serverObj *Server) NewServer(
+	listenAddrs string,
+	db incdb.Database,
+	dbmp databasemp.DatabaseInterface,
+	chainParams *blockchain.Params,
+	protocolVer string,
+	btcChain *btcrelaying.BlockChain,
+	bnbChainState *bnbrelaying.BNBChainState,
+	interrupt <-chan struct{},
+) error {
 	// Init data for Server
 	serverObj.protocolVersion = protocolVer
 	serverObj.chainParams = chainParams
@@ -315,9 +326,11 @@ func (serverObj *Server) NewServer(listenAddrs string, db incdb.Database, dbmp d
 	)
 
 	err = serverObj.blockChain.Init(&blockchain.Config{
-		ChainParams: serverObj.chainParams,
-		DataBase:    serverObj.dataBase,
-		MemCache:    serverObj.memCache,
+		BTCChain:      btcChain,
+		BNBChainState: bnbChainState,
+		ChainParams:   serverObj.chainParams,
+		DataBase:      serverObj.dataBase,
+		MemCache:      serverObj.memCache,
 		//MemCache:          nil,
 		BlockGen:          serverObj.blockgen,
 		Interrupt:         interrupt,
