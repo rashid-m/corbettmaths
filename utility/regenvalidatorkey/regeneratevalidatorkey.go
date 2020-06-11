@@ -21,12 +21,15 @@ type committeePubKey struct {
 }
 
 func main() {
-	salt := []byte("a")
+	salt := []byte(os.Getenv("SALT"))
 
 	// load nodes file
-	oldNodeFile, err := ioutil.ReadFile(os.Getenv("i"))
+	oldNodeFilePath := os.Getenv("OLD_NODES")
+	fmt.Println("Read file from " + oldNodeFilePath)
+	oldNodeFile, err := ioutil.ReadFile(oldNodeFilePath)
 	if err != nil {
 		log.Printf("oldNodeFile.Get err   #%v ", err)
+		return
 	}
 	contentNodesFile := make(map[string]interface{})
 	err = yaml.Unmarshal(oldNodeFile, &contentNodesFile)
@@ -36,7 +39,11 @@ func main() {
 	}
 
 	// load old key committee pub file
-	oldCommitteeKeyFile, err := ioutil.ReadFile("/Users/autononous/go/src/github.com/incognitochain/incognito-chain/utility/temp/keylist-mainnet.json")
+	oldCommitteeKeyFile, err := ioutil.ReadFile(os.Getenv("OLD_PUBKEYS"))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	committeePubKey := committeePubKey{
 		Beacon: []map[string]string{},
 		Shard:  make(map[string][]map[string]string),
@@ -129,10 +136,10 @@ func main() {
 
 	rewriteData, err := yaml.Marshal(contentNodesFile)
 	//fmt.Println(string(rewriteData))
-	outputFile := os.Getenv("o1")
-	os.Remove(outputFile)
-	os.Create(outputFile)
-	err = ioutil.WriteFile(outputFile, rewriteData, 0x666)
+	outputFileNodeServer := os.Getenv("NEW_NODES")
+	os.Remove(outputFileNodeServer)
+	os.Create(outputFileNodeServer)
+	err = ioutil.WriteFile(outputFileNodeServer, rewriteData, 0x666)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -141,10 +148,10 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	outputFilePublic := os.Getenv("o2")
-	os.Remove(outputFilePublic)
-	os.Create(outputFilePublic)
-	err = ioutil.WriteFile(outputFilePublic, publicData, 0x666)
+	outputFileCommitteePublicKey := os.Getenv("NEW_PUBKEYS")
+	os.Remove(outputFileCommitteePublicKey)
+	os.Create(outputFileCommitteePublicKey)
+	err = ioutil.WriteFile(outputFileCommitteePublicKey, publicData, 0x666)
 	if err != nil {
 		fmt.Println(err)
 	}
