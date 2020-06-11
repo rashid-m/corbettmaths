@@ -15,10 +15,13 @@ import (
 	"github.com/incognitochain/incognito-chain/metadata"
 	"github.com/incognitochain/incognito-chain/privacy"
 	"github.com/incognitochain/incognito-chain/pubsub"
+	bnbrelaying "github.com/incognitochain/incognito-chain/relaying/bnb"
+	btcrelaying "github.com/incognitochain/incognito-chain/relaying/btc"
 	"github.com/incognitochain/incognito-chain/transaction"
 	libp2p "github.com/libp2p/go-libp2p-peer"
 	"github.com/pkg/errors"
 	"io"
+	"sort"
 	"sync"
 )
 
@@ -40,8 +43,10 @@ type BestState struct {
 	Shard  map[byte]*ShardBestState
 }
 
-// config is a descriptor which specifies the blockchain instance configuration.
+// Config is a descriptor which specifies the blockchain instance configuration.
 type Config struct {
+	BTCChain          *btcrelaying.BlockChain
+	BNBChainState     *bnbrelaying.BNBChainState
 	DataBase          incdb.Database
 	MemCache          *memcache.MemoryCache
 	Interrupt         <-chan struct{}
@@ -522,3 +527,36 @@ func (blockchain *BlockChain) BackupBeaconChain(writer io.Writer) error {
 }
 
 // -------------- End of Blockchain BackUp And Restore --------------
+
+// GetConfig returns blockchain's config
+func (blockchain *BlockChain) GetConfig() *Config {
+	return &blockchain.config
+}
+
+// GetPortalParams returns portal params in beaconheight
+func (blockchain *BlockChain) GetPortalParams(beaconHeight uint64) PortalParams {
+	portalParamMap := blockchain.GetConfig().ChainParams.PortalParams
+	// only has one value - default value
+	if len(portalParamMap) == 1 {
+		return portalParamMap[0]
+	}
+
+	bchs := []uint64{}
+	for bch := range portalParamMap {
+		bchs = append(bchs, bch)
+	}
+	sort.Slice(bchs, func(i, j int) bool {
+		return bchs[i] < bchs[j]
+	})
+
+	bchKey := bchs[len(bchs)-1]
+	for i := len(bchs) - 1; i >= 0; i-- {
+		if beaconHeight < bchs[i] {
+			continue
+		}
+		bchKey = bchs[i]
+		break
+	}
+
+	return portalParamMap[bchKey]
+}

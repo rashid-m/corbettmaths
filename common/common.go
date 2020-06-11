@@ -460,6 +460,15 @@ func GetShardChainKey(shardID byte) string {
 	return ShardChainKey + "-" + strconv.Itoa(int(shardID))
 }
 
+func IsPortalToken(tokenIDStr string) bool {
+	isExisted, _ := SliceExists(PortalSupportedIncTokenIDs, tokenIDStr)
+	return isExisted
+}
+
+func IsPortalExchangeRateToken(tokenIDStr string) bool {
+	return IsPortalToken(tokenIDStr) || tokenIDStr == PRVIDStr
+}
+
 // CopyBytes returns an exact copy of the provided bytes.
 func CopyBytes(b []byte) (copiedBytes []byte) {
 	if b == nil {
@@ -497,6 +506,15 @@ func FromHex(s string) []byte {
 // HexToHash sets byte representation of s to hash.
 // If b is larger than len(h), b will be cropped from the left.
 func HexToHash(s string) Hash { return BytesToHash(FromHex(s)) }
+
+// AssertAndConvertStrToNumber asserts and convert a passed input to uint64 number
+func AssertAndConvertStrToNumber(numStr interface{}) (uint64, error) {
+	assertedNumStr, ok := numStr.(string)
+	if !ok {
+		return 0, errors.New("Could not assert the passed input to string")
+	}
+	return strconv.ParseUint(assertedNumStr, 10, 64)
+}
 
 func IndexOfUint64(target uint64, arr []uint64) int {
 	for i, v := range arr {

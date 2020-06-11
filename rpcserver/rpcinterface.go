@@ -173,9 +173,57 @@ var HttpHandler = map[string]httpHandler{
 
 	getBurningAddress: (*HttpServer).handleGetBurningAddress,
 
+	// portal
+	createAndSendTxWithCustodianDeposit:           (*HttpServer).handleCreateAndSendTxWithCustodianDeposit,
+	createAndSendTxWithReqPToken:                  (*HttpServer).handleCreateAndSendTxWithReqPToken,
+	getPortalState:                                (*HttpServer).handleGetPortalState,
+	getPortalCustodianDepositStatus:               (*HttpServer).handleGetPortalCustodianDepositStatus,
+	createAndSendRegisterPortingPublicTokens:      (*HttpServer).handleCreateAndSendRegisterPortingPublicTokens,
+	createAndSendPortalExchangeRates:              (*HttpServer).handleCreateAndSendPortalExchangeRates,
+	getPortalFinalExchangeRates:                   (*HttpServer).handleGetPortalFinalExchangeRates,
+	getPortalPortingRequestByKey:                  (*HttpServer).handleGetPortingRequestByKey,
+	getPortalPortingRequestByPortingId:            (*HttpServer).handleGetPortingRequestByPortingId,
+	convertExchangeRates:                          (*HttpServer).handleConvertExchangeRates,
+	getPortalReqPTokenStatus:                      (*HttpServer).handleGetPortalReqPTokenStatus,
+	getPortingRequestFees:                         (*HttpServer).handleGetPortingRequestFees,
+	createAndSendTxWithRedeemReq:                  (*HttpServer).handleCreateAndSendTxWithRedeemReq,
+	createAndSendTxWithReqUnlockCollateral:        (*HttpServer).handleCreateAndSendTxWithReqUnlockCollateral,
+	getPortalReqUnlockCollateralStatus:            (*HttpServer).handleGetPortalReqUnlockCollateralStatus,
+	getPortalReqRedeemStatus:                      (*HttpServer).handleGetPortalReqRedeemStatus,
+	createAndSendCustodianWithdrawRequest:         (*HttpServer).handleCreateAndSendCustodianWithdrawRequest,
+	getCustodianWithdrawByTxId:                    (*HttpServer).handleGetCustodianWithdrawByTxId,
+	getCustodianLiquidationStatus:                 (*HttpServer).handleGetCustodianLiquidationStatus,
+	createAndSendTxWithReqWithdrawRewardPortal:    (*HttpServer).handleCreateAndSendTxWithReqWithdrawRewardPortal,
+	getLiquidationExchangeRatesPool:               (*HttpServer).handleGetLiquidationExchangeRatesPool,
+	createAndSendRedeemLiquidationExchangeRates:   (*HttpServer).handleCreateAndSendRedeemLiquidationExchangeRates,
+	createAndSendLiquidationCustodianDeposit:      (*HttpServer).handleCreateAndSendLiquidationCustodianDeposit,
+	createAndSendTopUpWaitingPorting:              (*HttpServer).handleCreateAndSendTopUpWaitingPorting,
+	getAmountNeededForCustodianDepositLiquidation: (*HttpServer).handleGetAmountNeededForCustodianDepositLiquidation,
+	getPortalReward:                               (*HttpServer).handleGetPortalReward,
+	getRequestWithdrawPortalRewardStatus:          (*HttpServer).handleGetRequestWithdrawPortalRewardStatus,
+	createAndSendTxWithReqMatchingRedeem:          (*HttpServer).handleCreateAndSendTxWithReqMatchingRedeem,
+	getReqMatchingRedeemStatus:                    (*HttpServer).handleGetReqMatchingRedeemByTxIDStatus,
+	getPortalCustodianTopupStatus:                 (*HttpServer).handleGetPortalCustodianTopupStatus,
+	getPortalCustodianTopupWaitingPortingStatus:   (*HttpServer).handleGetPortalCustodianTopupWaitingPortingStatus,
+	getAmountTopUpWaitingPorting:                  (*HttpServer).handleGetAmountTopUpWaitingPorting,
+	getPortalReqRedeemByTxIDStatus:                (*HttpServer).handleGetPortalReqRedeemByTxIDStatus,
+	getReqRedeemFromLiquidationPoolByTxIDStatus:   (*HttpServer).handleGetReqRedeemFromLiquidationPoolByTxIDStatus,
+
+	// relaying
+	createAndSendTxWithRelayingBNBHeader: (*HttpServer).handleCreateAndSendTxWithRelayingBNBHeader,
+	createAndSendTxWithRelayingBTCHeader: (*HttpServer).handleCreateAndSendTxWithRelayingBTCHeader,
+	getRelayingBNBHeaderState:            (*HttpServer).handleGetRelayingBNBHeaderState,
+	getRelayingBNBHeaderByBlockHeight:    (*HttpServer).handleGetRelayingBNBHeaderByBlockHeight,
+	getBTCRelayingBestState:              (*HttpServer).handleGetBTCRelayingBestState,
+	getBTCBlockByHash:                    (*HttpServer).handleGetBTCBlockByHash,
+	getLatestBNBHeaderBlockHeight:        (*HttpServer).handleGetLatestBNBHeaderBlockHeight,
+
 	// incognnito mode for sc
 	getBurnProofForDepositToSC:                (*HttpServer).handleGetBurnProofForDepositToSC,
 	createAndSendBurningForDepositToSCRequest: (*HttpServer).handleCreateAndSendBurningForDepositToSCRequest,
+
+	// feature reward
+	getRewardFeature: (*HttpServer).handleGetRewardFeature,
 }
 
 // Commands that are available to a limited user

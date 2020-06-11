@@ -377,7 +377,59 @@ func (blockGenerator *BlockGenerator) buildResponseTxsFromBeaconInstructions(bea
 						newTx, err = blockGenerator.buildPDEMatchedNReturnedContributionTx(l[3], producerPrivateKey, shardID)
 					}
 				}
-
+			// portal
+			case metadata.PortalUserRegisterMeta:
+				if len(l) >= 4 && l[2] == common.PortalPortingRequestRejectedChainStatus {
+					newTx, err = blockGenerator.buildPortalRefundPortingFeeTx(l[3], producerPrivateKey, shardID)
+				}
+			case metadata.PortalCustodianDepositMeta:
+				if len(l) >= 4 && l[2] == common.PortalCustodianDepositRefundChainStatus {
+					newTx, err = blockGenerator.buildPortalRefundCustodianDepositTx(l[3], producerPrivateKey, shardID)
+				}
+			case metadata.PortalUserRequestPTokenMeta:
+				if len(l) >= 4 && l[2] == common.PortalReqPTokensAcceptedChainStatus {
+					newTx, err = blockGenerator.buildPortalAcceptedRequestPTokensTx(l[3], producerPrivateKey, shardID)
+				}
+				//custodian withdraw
+			case metadata.PortalCustodianWithdrawRequestMeta:
+				if len(l) >= 4 && l[2] == common.PortalCustodianWithdrawRequestAcceptedStatus {
+					newTx, err = blockGenerator.buildPortalCustodianWithdrawRequest(l[3], producerPrivateKey, shardID)
+				}
+			case metadata.PortalRedeemRequestMeta:
+				if len(l) >= 4 && (l[2] == common.PortalRedeemRequestRejectedChainStatus || l[2] == common.PortalRedeemReqCancelledByLiquidationChainStatus) {
+					newTx, err = blockGenerator.buildPortalRejectedRedeemRequestTx(l[3], producerPrivateKey, shardID)
+				}
+				//liquidation: redeem ptoken
+			case metadata.PortalRedeemLiquidateExchangeRatesMeta:
+				if len(l) >= 4 {
+					if l[2] == common.PortalRedeemLiquidateExchangeRatesSuccessChainStatus {
+						newTx, err = blockGenerator.buildPortalRedeemLiquidateExchangeRatesRequestTx(l[3], producerPrivateKey, shardID)
+					} else if l[2] == common.PortalRedeemLiquidateExchangeRatesRejectedChainStatus {
+						newTx, err = blockGenerator.buildPortalRefundRedeemLiquidateExchangeRatesTx(l[3], producerPrivateKey, shardID)
+					}
+				}
+			case metadata.PortalLiquidateCustodianMeta:
+				if len(l) >= 4 && l[2] == common.PortalLiquidateCustodianSuccessChainStatus {
+					newTx, err = blockGenerator.buildPortalLiquidateCustodianResponseTx(l[3], producerPrivateKey, shardID)
+				}
+			case metadata.PortalRequestWithdrawRewardMeta:
+				if len(l) >= 4 && l[2] == common.PortalReqWithdrawRewardAcceptedChainStatus {
+					newTx, err = blockGenerator.buildPortalAcceptedWithdrawRewardTx(l[3], producerPrivateKey, shardID)
+				}
+				//liquidation: custodian deposit
+			case metadata.PortalLiquidationCustodianDepositMeta:
+				if len(l) >= 4 && l[2] == common.PortalLiquidationCustodianDepositRejectedChainStatus {
+					newTx, err = blockGenerator.buildPortalLiquidationCustodianDepositReject(l[3], producerPrivateKey, shardID)
+				}
+			case metadata.PortalLiquidationCustodianDepositMetaV2:
+				if len(l) >= 4 && l[2] == common.PortalLiquidationCustodianDepositRejectedChainStatus {
+					newTx, err = blockGenerator.buildPortalLiquidationCustodianDepositRejectV2(l[3], producerPrivateKey, shardID)
+				}
+			//
+			case metadata.PortalTopUpWaitingPortingRequestMeta:
+				if len(l) >= 4 && l[2] == common.PortalTopUpWaitingPortingRejectedChainStatus {
+					newTx, err = blockGenerator.buildPortalRejectedTopUpWaitingPortingTx(l[3], producerPrivateKey, shardID)
+				}
 			default:
 				continue
 			}
