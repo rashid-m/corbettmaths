@@ -78,7 +78,6 @@ func main() {
 		}
 		newKey := base58.Base58Check{}.Encode(validatorKeyByte, 0x0)
 		beaconMap["KEY"] = newKey
-		fmt.Printf("New key beacon-%d: %v -> %s\n", i, key, beaconMap["KEY"])
 
 		//
 		oldPaymentAddress := committeePubKey.Beacon[i]["PaymentAddress"]
@@ -90,6 +89,8 @@ func main() {
 			"CommitteePublicKey": committeeKey[0],
 		}
 		committeePubKey.Beacon[i] = beaconPublicKey
+
+		fmt.Printf("New key beacon-%d: %v -> [validator key: %s] [committee pub key: %s] [payment address: %s] \n", i, key, beaconMap["KEY"], committeeKey[0], oldPaymentAddress)
 	}
 
 	//------ shard
@@ -115,7 +116,7 @@ func main() {
 			}
 			newKey := base58.Base58Check{}.Encode(newValidatorKeyByte, 0x0)
 			shardMap["KEY"] = string(newKey)
-			fmt.Printf("New key shard%d-%d: %s -> %s \n", shardId, i, key, shardMap["KEY"])
+			//fmt.Printf("New key shard%d-%d: %s -> %s \n", shardId, i, key, shardMap["KEY"])
 
 			//
 			oldPaymentAddress := committeePubKey.Shard[strconv.Itoa(shardId.(int))][i]["PaymentAddress"]
@@ -127,6 +128,8 @@ func main() {
 				"CommitteePublicKey": committeeKey[0],
 			}
 			committeePubKey.Shard[strconv.Itoa(shardId.(int))][i] = shardPublicKey
+
+			fmt.Printf("New key shard%d-%d: %s -> [validator key: %s] [committee pub key: %s] [payment address: %s] \n", shardId, i, key, shardMap["KEY"], committeeKey[0], oldPaymentAddress)
 		}
 	}
 
