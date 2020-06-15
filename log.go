@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/incognitochain/incognito-chain/dataaccessobject"
 	relaying "github.com/incognitochain/incognito-chain/relaying/bnb"
 	btcRelaying "github.com/incognitochain/incognito-chain/relaying/btc"
-	"github.com/incognitochain/incognito-chain/dataaccessobject"
 	"os"
 	"path/filepath"
 

@@ -653,7 +653,11 @@ func (shardBestState *ShardBestState) updateShardBestState(blockchain *BlockChai
 	for stakePublicKey, txHash := range stakingTx {
 		shardBestState.StakingTx[stakePublicKey] = txHash
 	}
-	err = shardBestState.processShardBlockInstruction(blockchain, shardBlock, committeeChange)
+	if common.IndexOfUint64(shardBlock.Header.BeaconHeight/blockchain.config.ChainParams.Epoch, blockchain.config.ChainParams.EpochBreakPointSwapNewKey) > -1 {
+		err = shardBestState.processShardBlockInstructionForKeyListV2(blockchain, shardBlock, committeeChange)
+	} else {
+		err = shardBestState.processShardBlockInstruction(blockchain, shardBlock, committeeChange)
+	}
 	if err != nil {
 		return err
 	}
@@ -844,6 +848,44 @@ func (shardBestState *ShardBestState) processShardBlockInstruction(blockchain *B
 	return nil
 }
 
+func (shardBestState *ShardBestState) processShardBlockInstructionForKeyListV2(blockchain *BlockChain, shardBlock *ShardBlock, committeeChange *committeeChange) error {
+	shardID := shardBlock.Header.ShardID
+	for _, instruction := range shardBlock.Body.Instructions {
+		if instruction[0] == SwapAction {
+			shardPendingValidatorStruct := shardBestState.ShardPendingValidator
+			inPublicKeys := strings.Split(instruction[1], ",")
+			inPublicKeyStructs, err := incognitokey.CommitteeBase58KeyListToStruct(inPublicKeys)
+			if err != nil {
+				return err
+			}
+			outPublicKeys := strings.Split(instruction[2], ",")
+			outPublicKeyStructs, err := incognitokey.CommitteeBase58KeyListToStruct(outPublicKeys)
+			if err != nil {
+				return err
+			}
+			inRewardReceiver := strings.Split(instruction[6], ",")
+			if len(inPublicKeys) != len(outPublicKeys) {
+				return NewBlockChainError(ProcessSwapInstructionError, fmt.Errorf("length new committee %+v, length out committee %+v", len(inPublicKeys), len(outPublicKeys)))
+			}
+			if len(inPublicKeys) != len(inRewardReceiver) {
+				return NewBlockChainError(ProcessSwapInstructionError, fmt.Errorf("length new committee %+v, new reward receiver %+v", len(inPublicKeys), len(inRewardReceiver)))
+			}
+			removedCommitteeSize := len(inPublicKeys)
+			remainedShardCommittees := shardBestState.ShardCommittee[removedCommitteeSize:]
+			tempShardSwappedCommittees := shardBestState.ShardCommittee[:shardBestState.MinShardCommitteeSize]
+			if !reflect.DeepEqual(outPublicKeyStructs, tempShardSwappedCommittees) {
+				return NewBlockChainError(SwapValidatorError, fmt.Errorf("expect swapped committe %+v but got %+v", tempShardSwappedCommittees, outPublicKeyStructs))
+			}
+			shardCommitteesStruct := append(inPublicKeyStructs, remainedShardCommittees...)
+			shardBestState.ShardPendingValidator = shardPendingValidatorStruct
+			shardBestState.ShardCommittee = shardCommitteesStruct
+			committeeChange.shardCommitteeAdded[shardID] = inPublicKeyStructs
+			committeeChange.shardCommitteeRemoved[shardID] = outPublicKeyStructs
+		}
+	}
+	return nil
+}
+
 // verifyPostProcessingShardBlock
 //	- commitee root
 //	- pending validator root
@@ -998,6 +1040,25 @@ func (blockchain *BlockChain) processStoreShardBlock(shardBlock *ShardBlock, com
 			return NewBlockChainError(StoreShardBlockError, err)
 		}
 		rewardReceiver, autoStaking = statedb.GetRewardReceiverAndAutoStaking(consensusStateDB, blockchain.GetShardIDs())
+		if common.IndexOfUint64(shardBlock.Header.BeaconHeight/blockchain.config.ChainParams.Epoch, blockchain.config.ChainParams.EpochBreakPointSwapNewKey) > -1 {
+			for _, instruction := range shardBlock.Body.Instructions {
+				if instruction[0] == SwapAction {
+					inRewardReceiver := strings.Split(instruction[6], ",")
+					outPublicKeys := strings.Split(instruction[2], ",")
+					outPublicKeyStructs, _ := incognitokey.CommitteeBase58KeyListToStruct(outPublicKeys)
+					inPublicKeys := strings.Split(instruction[1], ",")
+					inPublicKeyStructs, _ := incognitokey.CommitteeBase58KeyListToStruct(inPublicKeys)
+					removedCommittee := len(inPublicKeys)
+					for i := 0; i < removedCommittee; i++ {
+						delete(autoStaking, outPublicKeys[i])
+						delete(rewardReceiver, outPublicKeyStructs[i].GetIncKeyBase58())
+						autoStaking[inPublicKeys[i]] = false
+						rewardReceiver[inPublicKeyStructs[i].GetIncKeyBase58()] = inRewardReceiver[i]
+					}
+					break
+				}
+			}
+		}
 		//statedb===========================START
 		err = statedb.StoreOneShardCommittee(tempShardBestState.consensusStateDB, shardID, committeeChange.shardCommitteeAdded[shardID], rewardReceiver, autoStaking)
 		if err != nil {

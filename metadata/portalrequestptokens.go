@@ -114,7 +114,7 @@ func (reqPToken PortalRequestPTokens) ValidateSanityData(bcr BlockchainRetriever
 	}
 
 	// validate tokenID and porting proof
-	if !common.IsPortalToken(reqPToken.TokenID){
+	if !common.IsPortalToken(reqPToken.TokenID) {
 		return false, false, NewMetadataTxError(PortalRequestPTokenParamError, errors.New("TokenID is not supported currently on Portal"))
 	}
 

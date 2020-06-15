@@ -27,21 +27,21 @@ type PortalRedeemLiquidateExchangeRatesAction struct {
 }
 
 type PortalRedeemLiquidateExchangeRatesContent struct {
-	TokenID                 string // pTokenID in incognito chain
-	RedeemAmount            uint64
-	RedeemerIncAddressStr   string
-	TxReqID                 common.Hash
-	ShardID                 byte
-	TotalPTokenReceived		uint64
+	TokenID               string // pTokenID in incognito chain
+	RedeemAmount          uint64
+	RedeemerIncAddressStr string
+	TxReqID               common.Hash
+	ShardID               byte
+	TotalPTokenReceived   uint64
 }
 
 type RedeemLiquidateExchangeRatesStatus struct {
-	TxReqID               common.Hash
-	TokenID               string
-	RedeemerAddress       string
-	RedeemAmount          uint64
-	Status                byte
-	TotalPTokenReceived	  uint64
+	TxReqID             common.Hash
+	TokenID             string
+	RedeemerAddress     string
+	RedeemAmount        uint64
+	Status              byte
+	TotalPTokenReceived uint64
 }
 
 func NewRedeemLiquidateExchangeRatesStatus(txReqID common.Hash, tokenID string, redeemerAddress string, redeemAmount uint64, status byte, totalPTokenReceived uint64) *RedeemLiquidateExchangeRatesStatus {
@@ -56,7 +56,7 @@ func NewPortalRedeemLiquidateExchangeRates(
 ) (*PortalRedeemLiquidateExchangeRates, error) {
 	metadataBase := MetadataBase{Type: metaType}
 
-	portalRedeemLiquidateExchangeRates := &PortalRedeemLiquidateExchangeRates {
+	portalRedeemLiquidateExchangeRates := &PortalRedeemLiquidateExchangeRates{
 		TokenID:               tokenID,
 		RedeemAmount:          redeemAmount,
 		RedeemerIncAddressStr: incAddressStr,
