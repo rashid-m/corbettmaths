@@ -465,7 +465,7 @@ func IsPortalToken(tokenIDStr string) bool {
 	return isExisted
 }
 
-func IsPortalExchangeRateToken (tokenIDStr string) bool {
+func IsPortalExchangeRateToken(tokenIDStr string) bool {
 	return IsPortalToken(tokenIDStr) || tokenIDStr == PRVIDStr
 }
 
@@ -514,4 +514,13 @@ func AssertAndConvertStrToNumber(numStr interface{}) (uint64, error) {
 		return 0, errors.New("Could not assert the passed input to string")
 	}
 	return strconv.ParseUint(assertedNumStr, 10, 64)
+}
+
+func IndexOfUint64(target uint64, arr []uint64) int {
+	for i, v := range arr {
+		if v == target {
+			return i
+		}
+	}
+	return -1
 }

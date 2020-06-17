@@ -165,7 +165,6 @@ func (w *WaitingPortingRequest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-
 type WaitingPortingRequestObject struct {
 	db *StateDB
 	// Write caches.

@@ -41,10 +41,10 @@ func IsValidBNBAddress(bnbAddr string, chainID string) bool {
 		return false
 
 	}
-	if chainID == TestnetBNBChainID && prefix != types.TestNetwork.Bech32Prefixes()  {
+	if chainID == TestnetBNBChainID && prefix != types.TestNetwork.Bech32Prefixes() {
 		return false
 	}
-	if chainID == MainnetBNBChainID && prefix != types.ProdNetwork.Bech32Prefixes()  {
+	if chainID == MainnetBNBChainID && prefix != types.ProdNetwork.Bech32Prefixes() {
 		return false
 	}
 
@@ -53,7 +53,7 @@ func IsValidBNBAddress(bnbAddr string, chainID string) bool {
 
 func generateBNBAddress(network types.ChainNetwork) string {
 	km, _ := keys.NewKeyManager()
-	client, _ := client2.NewDexClient("dex.binance.org", network, km)  // api string can be "https://testnet-dex.binance.org" for testnet
+	client, _ := client2.NewDexClient("dex.binance.org", network, km) // api string can be "https://testnet-dex.binance.org" for testnet
 	accn := client.GetKeyManager().GetAddr().String()
 	return accn
 }
@@ -184,7 +184,3 @@ func getGenesisBNBBlockTestnet() *tdmtypes.Block {
 		LastCommit: &tdmtypes.Commit{},
 	}
 }
-
-
-
-

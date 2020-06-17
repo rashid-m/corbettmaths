@@ -10,12 +10,12 @@ import (
 // metadata - redeem request - create normal tx with this metadata
 type PortalLiquidateCustodian struct {
 	MetadataBase
-	UniqueRedeemID         string
-	TokenID                string // pTokenID in incognito chain
-	RedeemPubTokenAmount   uint64
-	MintedCollateralAmount uint64 // minted PRV amount for sending back to users
-	RedeemerIncAddressStr  string
-	CustodianIncAddressStr string
+	UniqueRedeemID           string
+	TokenID                  string // pTokenID in incognito chain
+	RedeemPubTokenAmount     uint64
+	MintedCollateralAmount   uint64 // minted PRV amount for sending back to users
+	RedeemerIncAddressStr    string
+	CustodianIncAddressStr   string
 	LiquidatedByExchangeRate bool
 }
 
@@ -62,12 +62,12 @@ func NewPortalLiquidateCustodian(
 		Type: metaType,
 	}
 	liquidCustodianMeta := &PortalLiquidateCustodian{
-		UniqueRedeemID:         uniqueRedeemID,
-		TokenID:                tokenID,
-		RedeemPubTokenAmount:   redeemAmount,
-		MintedCollateralAmount: mintedCollateralAmount,
-		RedeemerIncAddressStr:  redeemerIncAddressStr,
-		CustodianIncAddressStr: custodianIncAddressStr,
+		UniqueRedeemID:           uniqueRedeemID,
+		TokenID:                  tokenID,
+		RedeemPubTokenAmount:     redeemAmount,
+		MintedCollateralAmount:   mintedCollateralAmount,
+		RedeemerIncAddressStr:    redeemerIncAddressStr,
+		CustodianIncAddressStr:   custodianIncAddressStr,
 		LiquidatedByExchangeRate: liquidatedByExchangeRate,
 	}
 	liquidCustodianMeta.MetadataBase = metadataBase

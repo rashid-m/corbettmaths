@@ -14,9 +14,9 @@ import (
 
 type PortalLiquidationCustodianDeposit struct {
 	MetadataBase
-	IncogAddressStr string
-	PTokenId string
-	DepositedAmount uint64
+	IncogAddressStr        string
+	PTokenId               string
+	DepositedAmount        uint64
 	FreeCollateralSelected bool
 }
 
@@ -27,35 +27,35 @@ type PortalLiquidationCustodianDepositAction struct {
 }
 
 type PortalLiquidationCustodianDepositContent struct {
-	IncogAddressStr string
-	PTokenId string
-	DepositedAmount uint64
+	IncogAddressStr        string
+	PTokenId               string
+	DepositedAmount        uint64
 	FreeCollateralSelected bool
-	TxReqID         common.Hash
-	ShardID         byte
+	TxReqID                common.Hash
+	ShardID                byte
 }
 
 type LiquidationCustodianDepositStatus struct {
-	TxReqID common.Hash
-	IncogAddressStr string
-	PTokenId string
-	DepositAmount uint64
+	TxReqID                common.Hash
+	IncogAddressStr        string
+	PTokenId               string
+	DepositAmount          uint64
 	FreeCollateralSelected bool
-	Status byte
+	Status                 byte
 }
 
 func NewLiquidationCustodianDepositStatus(txReqID common.Hash, incogAddressStr string, PTokenId string, depositAmount uint64, freeCollateralSelected bool, status byte) *LiquidationCustodianDepositStatus {
 	return &LiquidationCustodianDepositStatus{TxReqID: txReqID, IncogAddressStr: incogAddressStr, PTokenId: PTokenId, DepositAmount: depositAmount, FreeCollateralSelected: freeCollateralSelected, Status: status}
 }
 
-func NewPortalLiquidationCustodianDeposit(metaType int, incognitoAddrStr string, pToken string, amount uint64, freeCollateralSelected bool) (*PortalLiquidationCustodianDeposit , error) {
+func NewPortalLiquidationCustodianDeposit(metaType int, incognitoAddrStr string, pToken string, amount uint64, freeCollateralSelected bool) (*PortalLiquidationCustodianDeposit, error) {
 	metadataBase := MetadataBase{
 		Type: metaType,
 	}
-	custodianDepositMeta := &PortalLiquidationCustodianDeposit {
-		IncogAddressStr: incognitoAddrStr,
-		PTokenId: pToken,
-		DepositedAmount: amount,
+	custodianDepositMeta := &PortalLiquidationCustodianDeposit{
+		IncogAddressStr:        incognitoAddrStr,
+		PTokenId:               pToken,
+		DepositedAmount:        amount,
 		FreeCollateralSelected: freeCollateralSelected,
 	}
 	custodianDepositMeta.MetadataBase = metadataBase

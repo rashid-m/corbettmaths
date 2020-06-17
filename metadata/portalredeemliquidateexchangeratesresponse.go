@@ -15,9 +15,9 @@ type PortalRedeemLiquidateExchangeRatesResponse struct {
 	RequestStatus    string
 	ReqTxID          common.Hash
 	RequesterAddrStr string
-	RedeemAmount	 uint64
+	RedeemAmount     uint64
 	Amount           uint64
-	TokenID       	 string
+	TokenID          string
 }
 
 func NewPortalRedeemLiquidateExchangeRatesResponse(
@@ -39,7 +39,7 @@ func NewPortalRedeemLiquidateExchangeRatesResponse(
 		RequesterAddrStr: requesterAddressStr,
 		RedeemAmount:     redeemAmount,
 		Amount:           amount,
-		TokenID:       	  tokenID,
+		TokenID:          tokenID,
 	}
 }
 

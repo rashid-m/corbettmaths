@@ -206,8 +206,8 @@ func (blockchain *BlockChain) processSalaryInstructions(rewardStateDB *statedb.S
 			}
 
 		}
-}
-return nil
+	}
+	return nil
 }
 
 func (blockchain *BlockChain) addShardCommitteeReward(rewardStateDB *statedb.StateDB, shardID byte, rewardInfoShardToProcess *metadata.ShardBlockRewardInfo, committeeOfShardToProcess []incognitokey.CommitteePublicKey, rewardReceiver map[string]string) (err error) {

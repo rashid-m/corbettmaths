@@ -15,7 +15,7 @@ type PortalLiquidationCustodianDepositResponse struct {
 	DepositStatus    string
 	ReqTxID          common.Hash
 	CustodianAddrStr string
-	DepositedAmount uint64
+	DepositedAmount  uint64
 }
 
 func NewPortalLiquidationCustodianDepositResponse(
@@ -34,7 +34,7 @@ func NewPortalLiquidationCustodianDepositResponse(
 		ReqTxID:          reqTxID,
 		MetadataBase:     metadataBase,
 		CustodianAddrStr: custodianAddressStr,
-		DepositedAmount: depositedAmount,
+		DepositedAmount:  depositedAmount,
 	}
 }
 

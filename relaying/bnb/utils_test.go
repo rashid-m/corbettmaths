@@ -1,10 +1,10 @@
 package bnb
 
 import (
+	"fmt"
 	"github.com/binance-chain/go-sdk/common/types"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"fmt"
 )
 
 func TestGenerateBNBAddress(t *testing.T) {
