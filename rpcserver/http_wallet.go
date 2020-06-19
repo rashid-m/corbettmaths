@@ -383,10 +383,10 @@ func (httpServer *HttpServer) handleListPrivacyCustomToken(params interface{}, c
 
 func (httpServer *HttpServer) handleGetPrivacyCustomToken(params interface{}, closeChan <-chan struct{}) (interface{}, *rpcservice.RPCError) {
 	arrayParams := common.InterfaceSlice(params)
-	if arrayParams == nil || len(arrayParams) < 1 {
+	if arrayParams == nil || len(arrayParams) != 1 {
 		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, errors.New("params is invalid"))
 	}
-	tokenIDStr, ok := arrayParams[1].(string)
+	tokenIDStr, ok := arrayParams[0].(string)
 	if !ok {
 		return nil, rpcservice.NewRPCError(rpcservice.RPCInvalidParamsError, errors.New("params type is invalid"))
 	}
