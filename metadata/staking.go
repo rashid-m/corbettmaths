@@ -49,6 +49,13 @@ func NewStakingMetadata(
 /*
  */
 func (sm *StakingMetadata) ValidateMetadataByItself() bool {
+
+	// TODO: temporary block this feature when sm.AutoReStaking = false
+	if sm.AutoReStaking == false {
+		Logger.log.Warnf("temporary block this feature when sm.AutoReStaking = false")
+		return false
+	}
+
 	rewardReceiverPaymentAddress := sm.RewardReceiverPaymentAddress
 	rewardReceiverWallet, err := wallet.Base58CheckDeserialize(rewardReceiverPaymentAddress)
 	if err != nil || rewardReceiverWallet == nil {
