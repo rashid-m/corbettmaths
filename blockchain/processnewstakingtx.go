@@ -57,13 +57,15 @@ func (blockchain *BlockChain) buildNewStakingTx() {
 			panic(err)
 		}
 		for _, block := range blocks {
-			newMap, err := blockchain.GetMapStakingTxFromBeaconBlock(stakingInfo.MStakingTX, block)
+			newMap, err := blockchain.ProcessStakingTxFromBeaconBlock(stakingInfo.MStakingTX, block)
 			if err != nil {
 				Logger.log.Error(err)
 				panic(err)
 			}
 			stakingInfo.Height = block.GetHeight()
 			stakingInfo.MStakingTX = newMap
+
+			//store map at checkpoint height, or backup at every 100 processed block if less than checkpoint height
 			if block.GetHeight() == NEWSTAKINGTX_HEIGHT_SWITCH || (block.GetHeight() < NEWSTAKINGTX_HEIGHT_SWITCH && block.GetHeight()%100 == 0) {
 				rawdbv2.StoreMapStakingTxNew(bDB, block.GetHeight(), newMap)
 			}
@@ -72,7 +74,7 @@ func (blockchain *BlockChain) buildNewStakingTx() {
 	}
 }
 
-func (blockchain *BlockChain) GetMapStakingTxFromBeaconBlock(curMap map[int]map[string]string, bcBlk *BeaconBlock) (map[int]map[string]string, error) {
+func (blockchain *BlockChain) ProcessStakingTxFromBeaconBlock(curMap map[int]map[string]string, bcBlk *BeaconBlock) (map[int]map[string]string, error) {
 	beaconConsensusRootHash, err := blockchain.GetBeaconConsensusRootHash(blockchain.GetDatabase(), bcBlk.GetHeight())
 	if err != nil {
 		return nil, fmt.Errorf("Beacon Consensus Root Hash of Height %+v not found ,error %+v", bcBlk.GetHeight(), err)

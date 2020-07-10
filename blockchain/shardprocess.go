@@ -679,7 +679,7 @@ func (shardBestState *ShardBestState) updateShardBestState(blockchain *BlockChai
 					return errors.New("Stakingtx process not ready")
 				}
 
-				//if ready, replace new stakingtx with current shardbeststate stakingtx
+				//if ready, replace current shardbeststate stakingtx with the new stakingtx
 				shardBestState.StakingTx = stakingInfo.CloneStakingTx(int(shardBestState.ShardID))
 				break
 			}
