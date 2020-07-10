@@ -59,7 +59,15 @@ func (blockchain *BlockChain) buildNewStakingTx() {
 		blocks, err := FetchBeaconBlockFromHeight(bDB, stakingInfo.Height+1, nextRequestHeight)
 		if err != nil {
 			Logger.log.Error(err)
-			panic(err)
+			for nextHeight := nextRequestHeight; nextHeight >= stakingInfo.Height+1; nextHeight-- {
+				_, err := FetchBeaconBlockFromHeight(bDB, nextHeight, nextHeight)
+				if err == nil {
+					blocks, err = FetchBeaconBlockFromHeight(bDB, stakingInfo.Height+1, nextHeight)
+					if err == nil {
+						break
+					}
+				}
+			}
 		}
 
 		//process beacon blocks
