@@ -11,10 +11,11 @@ import (
 )
 
 /*
-	This hot fox include:
+	This hot fix include:
 	- init build process when init chain state
 	- build process implementation (proecssnewstakingtx.go)
 	- database access (accessor_newstakingtx.go)
+	- replace process when updateshardbeststate
 */
 
 const NEWSTAKINGTX_HEIGHT_SWITCH = 1000000
