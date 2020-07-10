@@ -10,7 +10,7 @@ import (
 var NewStakingTXPrefix = []byte("newstakingtxstatus-")
 
 type StakingTXInfo struct {
-	MStakingTX map[int]map[string]string
+	MStakingTX map[int]map[string]string //shardID -> (committee->txid)
 	Height     uint64
 }
 

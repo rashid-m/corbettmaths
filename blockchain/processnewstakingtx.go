@@ -22,9 +22,11 @@ const NEWSTAKINGTX_HEIGHT_SWITCH = 1000000
 func (blockchain *BlockChain) buildNewStakingTx() {
 	bDB := blockchain.GetDatabase()
 	stakingInfo, err := rawdbv2.GetMapStakingTxNew(bDB)
+
+	//no data in database => init one
 	if err != nil {
 		stakingInfo = &rawdbv2.StakingTXInfo{
-			MStakingTX: make(map[int]map[string]string),
+			MStakingTX: make(map[int]map[string]string), //shardID -> (committee->txid)
 			Height:     2,
 		}
 		for i := 0; i < blockchain.GetActiveShardNumber(); i++ {
@@ -32,30 +34,34 @@ func (blockchain *BlockChain) buildNewStakingTx() {
 		}
 	}
 
+	//fetch each beacon block and process stakingtx for all shard, until we get checkpoint
 	for {
-		if stakingInfo.Height > NEWSTAKINGTX_HEIGHT_SWITCH {
-			break
-		}
 		nextRequestHeight := stakingInfo.Height + 500
+		//if > checkpoint
 		if nextRequestHeight > NEWSTAKINGTX_HEIGHT_SWITCH {
 			nextRequestHeight = NEWSTAKINGTX_HEIGHT_SWITCH
 		}
 
+		//if > current beacon height (only fetch to the best block)
 		if nextRequestHeight > blockchain.GetBeaconHeight() {
 			nextRequestHeight = blockchain.GetBeaconHeight()
 		}
 
-		if nextRequestHeight <= stakingInfo.Height {
+		fmt.Println("NEWTX: get blocks", stakingInfo.Height+1, nextRequestHeight)
+
+		//if beacon dont have new block, wait 1 second
+		if nextRequestHeight < stakingInfo.Height+1 {
 			time.Sleep(time.Second)
 			continue
 		}
 
-		fmt.Println("NEWTX: get blocks", stakingInfo.Height+1, nextRequestHeight)
 		blocks, err := FetchBeaconBlockFromHeight(bDB, stakingInfo.Height+1, nextRequestHeight)
 		if err != nil {
 			Logger.log.Error(err)
 			panic(err)
 		}
+
+		//process beacon blocks
 		for _, block := range blocks {
 			newMap, err := blockchain.ProcessStakingTxFromBeaconBlock(stakingInfo.MStakingTX, block)
 			if err != nil {
@@ -65,9 +71,23 @@ func (blockchain *BlockChain) buildNewStakingTx() {
 			stakingInfo.Height = block.GetHeight()
 			stakingInfo.MStakingTX = newMap
 
-			//store map at checkpoint height, or backup at every 100 processed block if less than checkpoint height
-			if block.GetHeight() == NEWSTAKINGTX_HEIGHT_SWITCH || (block.GetHeight() < NEWSTAKINGTX_HEIGHT_SWITCH && block.GetHeight()%100 == 0) {
-				rawdbv2.StoreMapStakingTxNew(bDB, block.GetHeight(), newMap)
+			//backup at every 100 processed block if less than checkpoint height
+			if block.GetHeight() < NEWSTAKINGTX_HEIGHT_SWITCH && block.GetHeight()%500 == 0 {
+				err := rawdbv2.StoreMapStakingTxNew(bDB, block.GetHeight(), newMap)
+				if err != nil {
+					Logger.log.Error(err)
+					panic("Store stakingtx map error")
+				}
+			}
+
+			//if we reach checkpoint, store map and return
+			if block.GetHeight() == NEWSTAKINGTX_HEIGHT_SWITCH {
+				err := rawdbv2.StoreMapStakingTxNew(bDB, block.GetHeight(), newMap)
+				if err != nil {
+					Logger.log.Error(err)
+					panic("Store stakingtx map error")
+				}
+				return
 			}
 		}
 
@@ -115,7 +135,7 @@ func (blockchain *BlockChain) ProcessStakingTxFromBeaconBlock(curMap map[int]map
 						if err != nil {
 							continue
 						}
-						// if transaction belong to this shard then add to shard beststate
+						// update stakingtx for this transaction
 						curMap[int(shardID)][newShardCandidates[i]] = v
 					}
 				}
