@@ -2,12 +2,13 @@ package blockchain
 
 import (
 	"fmt"
-	"github.com/incognitochain/incognito-chain/common"
-	"github.com/incognitochain/incognito-chain/dataaccessobject/rawdbv2"
-	"github.com/incognitochain/incognito-chain/dataaccessobject/statedb"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/incognitochain/incognito-chain/common"
+	"github.com/incognitochain/incognito-chain/dataaccessobject/rawdbv2"
+	"github.com/incognitochain/incognito-chain/dataaccessobject/statedb"
 )
 
 /*
@@ -118,7 +119,9 @@ func (blockchain *BlockChain) processStakingTxFromBeaconBlock(curMap map[int]map
 				if err != nil {
 					panic(err)
 				}
-				delete(curMap[sid], outPublicKey)
+				for k := range curMap {
+					delete(curMap[k], outPublicKey)
+				}
 			}
 		case StakeAction:
 			switch l[2] {
