@@ -14,6 +14,14 @@ type StakingTXInfo struct {
 	Height     uint64
 }
 
+func (s *StakingTXInfo) CloneStakingTx(sid int) map[string]string {
+	res := make(map[string]string)
+	for k, v := range s.MStakingTX[sid] {
+		res[k] = v
+	}
+	return res
+}
+
 func StoreMapStakingTxNew(db incdb.KeyValueWriter, height uint64, mStakingTx map[int]map[string]string) error {
 	key := NewStakingTXPrefix
 	data, err := json.Marshal(StakingTXInfo{
@@ -40,14 +48,4 @@ func GetMapStakingTxNew(db incdb.KeyValueReader) (*StakingTXInfo, error) {
 		return nil, err
 	}
 	return value, nil
-}
-
-func DeleteMapStakingTxNew(db incdb.KeyValueWriter) error {
-	key := NewStakingTXPrefix
-	err := db.Delete(key)
-	if err != nil {
-		fmt.Println("DeleteShardStakingTxMapError", err)
-		return errors.New("DeleteShardStakingTxMapError")
-	}
-	return nil
 }

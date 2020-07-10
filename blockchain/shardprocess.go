@@ -662,7 +662,26 @@ func (shardBestState *ShardBestState) updateShardBestState(blockchain *BlockChai
 		for _, beaconBlock := range beaconBlocks {
 			if beaconBlock.GetHeight() == NEWSTAKINGTX_HEIGHT_SWITCH {
 				replaceInThisBlock = true
-				//TODO: retore staking for this shardID
+				//retore staking for this shardID
+				stakingInfo, err := rawdbv2.GetMapStakingTxNew(blockchain.GetDatabase())
+				if err != nil {
+					Logger.log.Error("StakingTx is not ready")
+					return errors.New("StakingTx is not ready")
+				}
+
+				if stakingInfo.Height > NEWSTAKINGTX_HEIGHT_SWITCH {
+					Logger.log.Error("Stakingtx process must not be larger than", NEWSTAKINGTX_HEIGHT_SWITCH)
+					panic("ReplaceStakingTx fail")
+				}
+
+				if stakingInfo.Height < NEWSTAKINGTX_HEIGHT_SWITCH {
+					Logger.log.Error("Waiting! Stakingtx process not ready", stakingInfo.Height)
+					return errors.New("Stakingtx process not ready")
+				}
+
+				//if ready, replace new stakingtx with current shardbeststate stakingtx
+				shardBestState.StakingTx = stakingInfo.CloneStakingTx(int(shardBestState.ShardID))
+				break
 			}
 		}
 
