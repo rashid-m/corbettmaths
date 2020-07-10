@@ -64,7 +64,7 @@ func (blockchain *BlockChain) buildNewStakingTx() {
 
 		//process beacon blocks
 		for _, block := range blocks {
-			newMap, err := blockchain.ProcessStakingTxFromBeaconBlock(stakingInfo.MStakingTX, block)
+			newMap, err := blockchain.processStakingTxFromBeaconBlock(stakingInfo.MStakingTX, block)
 			if err != nil {
 				Logger.log.Error(err)
 				panic(err)
@@ -95,7 +95,7 @@ func (blockchain *BlockChain) buildNewStakingTx() {
 	}
 }
 
-func (blockchain *BlockChain) ProcessStakingTxFromBeaconBlock(curMap map[int]map[string]string, bcBlk *BeaconBlock) (map[int]map[string]string, error) {
+func (blockchain *BlockChain) processStakingTxFromBeaconBlock(curMap map[int]map[string]string, bcBlk *BeaconBlock) (map[int]map[string]string, error) {
 	beaconConsensusRootHash, err := blockchain.GetBeaconConsensusRootHash(blockchain.GetDatabase(), bcBlk.GetHeight())
 	if err != nil {
 		return nil, fmt.Errorf("Beacon Consensus Root Hash of Height %+v not found ,error %+v", bcBlk.GetHeight(), err)
