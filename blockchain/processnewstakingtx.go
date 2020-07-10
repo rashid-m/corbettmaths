@@ -2,7 +2,6 @@ package blockchain
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -114,10 +113,6 @@ func (blockchain *BlockChain) processStakingTxFromBeaconBlock(curMap map[int]map
 				res, ok := autoStaking[outPublicKey]
 				if ok && res {
 					continue
-				}
-				sid, err := strconv.Atoi(l[4])
-				if err != nil {
-					panic(err)
 				}
 				for k := range curMap {
 					delete(curMap[k], outPublicKey)
