@@ -680,6 +680,7 @@ func (shardBestState *ShardBestState) updateShardBestState(blockchain *BlockChai
 				}
 
 				//if ready, replace current shardbeststate stakingtx with the new stakingtx
+				Logger.log.Info("NEWTX: Replace stakingtx")
 				shardBestState.StakingTx = stakingInfo.CloneStakingTx(int(shardBestState.ShardID))
 				break
 			}

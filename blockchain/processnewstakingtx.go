@@ -18,7 +18,7 @@ import (
 	- replace process when updateshardbeststate
 */
 
-const NEWSTAKINGTX_HEIGHT_SWITCH = 1000000
+const NEWSTAKINGTX_HEIGHT_SWITCH = 1e9
 
 func (blockchain *BlockChain) buildNewStakingTx() {
 	bDB := blockchain.GetDatabase()
@@ -37,7 +37,7 @@ func (blockchain *BlockChain) buildNewStakingTx() {
 
 	//fetch each beacon block and process stakingtx for all shard, until we get checkpoint
 	for {
-		nextRequestHeight := stakingInfo.Height + 500
+		nextRequestHeight := stakingInfo.Height + 1000
 		//if > checkpoint
 		if nextRequestHeight > NEWSTAKINGTX_HEIGHT_SWITCH {
 			nextRequestHeight = NEWSTAKINGTX_HEIGHT_SWITCH
@@ -48,7 +48,14 @@ func (blockchain *BlockChain) buildNewStakingTx() {
 			nextRequestHeight = blockchain.GetBeaconHeight()
 		}
 
-		fmt.Println("NEWTX: get blocks", stakingInfo.Height+1, nextRequestHeight)
+		fmt.Printf("NEWTX: current block: %v, next process: %v\n", stakingInfo.Height, nextRequestHeight)
+		for sid, stakingMap := range stakingInfo.MStakingTX {
+			hash, err := generateHashFromMapStringString(stakingMap)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Printf("NEWTX: shard %v staking tx root hash %v\n", sid, hash.String())
+		}
 
 		//if beacon dont have new block, wait 1 second
 		if nextRequestHeight < stakingInfo.Height+1 {
@@ -72,6 +79,7 @@ func (blockchain *BlockChain) buildNewStakingTx() {
 
 		//process beacon blocks
 		for _, block := range blocks {
+			fmt.Printf("Process block: %v\n", block.GetHeight())
 			newMap, err := blockchain.processStakingTxFromBeaconBlock(stakingInfo.MStakingTX, block)
 			if err != nil {
 				Logger.log.Error(err)
@@ -104,19 +112,20 @@ func (blockchain *BlockChain) buildNewStakingTx() {
 }
 
 func (blockchain *BlockChain) processStakingTxFromBeaconBlock(curMap map[int]map[string]string, bcBlk *BeaconBlock) (map[int]map[string]string, error) {
-	beaconConsensusRootHash, err := blockchain.GetBeaconConsensusRootHash(blockchain.GetDatabase(), bcBlk.GetHeight())
-	if err != nil {
-		return nil, fmt.Errorf("Beacon Consensus Root Hash of Height %+v not found ,error %+v", bcBlk.GetHeight(), err)
-	}
-	beaconConsensusStateDB, err := statedb.NewWithPrefixTrie(beaconConsensusRootHash, statedb.NewDatabaseAccessWarper(blockchain.GetDatabase()))
-	if err != nil {
-		return nil, err
-	}
-	_, autoStaking := statedb.GetRewardReceiverAndAutoStaking(beaconConsensusStateDB, blockchain.GetShardIDs())
+
 	for _, l := range bcBlk.Body.Instructions {
 		switch l[0] {
 		case SwapAction:
 			for _, outPublicKey := range strings.Split(l[2], ",") {
+				beaconConsensusRootHash, err := blockchain.GetBeaconConsensusRootHash(blockchain.GetDatabase(), bcBlk.GetHeight())
+				if err != nil {
+					return nil, fmt.Errorf("Beacon Consensus Root Hash of Height %+v not found ,error %+v", bcBlk.GetHeight(), err)
+				}
+				beaconConsensusStateDB, err := statedb.NewWithPrefixTrie(beaconConsensusRootHash, statedb.NewDatabaseAccessWarper(blockchain.GetDatabase()))
+				if err != nil {
+					return nil, err
+				}
+				_, autoStaking := statedb.GetRewardReceiverAndAutoStaking(beaconConsensusStateDB, blockchain.GetShardIDs())
 				// If out public key has auto staking then ignore this public key
 				res, ok := autoStaking[outPublicKey]
 				if ok && res {
