@@ -2,11 +2,18 @@ package rpcserver
 
 import (
 	"errors"
+	"github.com/incognitochain/incognito-chain/dataaccessobject/rawdbv2"
 
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/rpcserver/jsonresult"
 	"github.com/incognitochain/incognito-chain/rpcserver/rpcservice"
 )
+
+func (httpServer *HttpServer) handleGetMapStakingTx(params interface{}, closeChan <-chan struct{}) (interface{}, *rpcservice.RPCError) {
+	bDB := httpServer.config.BlockChain.GetDatabase()
+	stakingInfo, err := rawdbv2.GetMapStakingTxNew(bDB)
+	return stakingInfo, rpcservice.NewRPCError(500, err)
+}
 
 /*
 handleGetBeaconBestState - RPC get beacon best state
