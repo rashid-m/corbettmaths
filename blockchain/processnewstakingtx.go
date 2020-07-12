@@ -50,7 +50,7 @@ func (blockchain *BlockChain) buildNewStakingTx() {
 
 		fmt.Printf("NEWTX: current block: %v, next process: %v\n", stakingInfo.Height, nextRequestHeight)
 		for sid, stakingMap := range stakingInfo.MStakingTX {
-			hash, err := generateHashFromMapStringString(stakingMap)
+			hash, err := GenerateHashFromMapStringString(stakingMap)
 			if err != nil {
 				panic(err)
 			}

@@ -2,6 +2,7 @@ package rpcserver
 
 import (
 	"errors"
+	"github.com/incognitochain/incognito-chain/blockchain"
 	"github.com/incognitochain/incognito-chain/dataaccessobject/rawdbv2"
 
 	"github.com/incognitochain/incognito-chain/common"
@@ -12,7 +13,20 @@ import (
 func (httpServer *HttpServer) handleGetMapStakingTx(params interface{}, closeChan <-chan struct{}) (interface{}, *rpcservice.RPCError) {
 	bDB := httpServer.config.BlockChain.GetDatabase()
 	stakingInfo, err := rawdbv2.GetMapStakingTxNew(bDB)
-	return stakingInfo, rpcservice.NewRPCError(500, err)
+
+	stakingInfoResult := struct {
+		Height        uint64
+		StakingTxRoot map[int]string
+	}{}
+	stakingInfoResult.Height = stakingInfo.Height
+	for sid, stakingMap := range stakingInfo.MStakingTX {
+		hash, err := blockchain.GenerateHashFromMapStringString(stakingMap)
+		if err != nil {
+			panic(err)
+		}
+		stakingInfoResult.StakingTxRoot[sid] = hash.String()
+	}
+	return stakingInfoResult, rpcservice.NewRPCError(500, err)
 }
 
 /*
