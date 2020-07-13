@@ -30,7 +30,7 @@ func (httpServer *HttpServer) handleGetMapStakingTx(params interface{}, closeCha
 		}
 		stakingInfoResult.StakingTxRoot[sid] = hash.String()
 	}
-	return stakingInfoResult, rpcservice.NewRPCError(500, err)
+	return stakingInfoResult, nil
 }
 
 /*
