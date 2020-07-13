@@ -13,12 +13,16 @@ import (
 func (httpServer *HttpServer) handleGetMapStakingTx(params interface{}, closeChan <-chan struct{}) (interface{}, *rpcservice.RPCError) {
 	bDB := httpServer.config.BlockChain.GetDatabase()
 	stakingInfo, err := rawdbv2.GetMapStakingTxNew(bDB)
-
+	if err != nil {
+		return nil, rpcservice.NewRPCError(500, err)
+	}
 	stakingInfoResult := struct {
 		Height        uint64
 		StakingTxRoot map[int]string
 	}{}
 	stakingInfoResult.Height = stakingInfo.Height
+	stakingInfoResult.StakingTxRoot = map[int]string{}
+
 	for sid, stakingMap := range stakingInfo.MStakingTX {
 		hash, err := blockchain.GenerateHashFromMapStringString(stakingMap)
 		if err != nil {

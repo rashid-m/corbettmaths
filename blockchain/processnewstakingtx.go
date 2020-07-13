@@ -48,18 +48,23 @@ func (blockchain *BlockChain) buildNewStakingTx() {
 			nextRequestHeight = blockchain.GetBeaconHeight()
 		}
 
-		fmt.Printf("NEWTX: current block: %v, next process: %v\n", stakingInfo.Height, nextRequestHeight)
-		for sid, stakingMap := range stakingInfo.MStakingTX {
-			hash, err := GenerateHashFromMapStringString(stakingMap)
-			if err != nil {
-				panic(err)
-			}
-			fmt.Printf("NEWTX: shard %v staking tx root hash %v\n", sid, hash.String())
-		}
+		//fmt.Printf("NEWTX: current block: %v, next process: %v\n", stakingInfo.Height, nextRequestHeight)
+		//for sid, stakingMap := range stakingInfo.MStakingTX {
+		//	hash, err := GenerateHashFromMapStringString(stakingMap)
+		//	if err != nil {
+		//		panic(err)
+		//	}
+		//	fmt.Printf("NEWTX: shard %v staking tx root hash %v\n", sid, hash.String())
+		//}
 
-		//if beacon dont have new block, wait 1 second
+		//if beacon dont have new block, wait 5 second
 		if nextRequestHeight < stakingInfo.Height+1 {
-			time.Sleep(time.Second)
+			time.Sleep(5 * time.Second)
+			err := rawdbv2.StoreMapStakingTxNew(bDB, stakingInfo.Height, stakingInfo.MStakingTX)
+			if err != nil {
+				Logger.log.Error(err)
+				panic("Store stakingtx map error")
+			}
 			continue
 		}
 
