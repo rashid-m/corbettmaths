@@ -242,7 +242,7 @@ func (blockchain *BlockChain) initChainState() error {
 		blockchain.Chains[shardChain.ChainName] = &shardChain
 	}
 
-	go blockchain.buildNewStakingTx()
+	//go blockchain.buildNewStakingTx()
 	return nil
 }
 
