@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/incognitochain/incognito-chain/dataaccessobject/rawdbv2"
 	"github.com/incognitochain/incognito-chain/dataaccessobject/statedb"
+	"io/ioutil"
+	"os"
 	"reflect"
 	"sort"
 	"strconv"
@@ -662,26 +664,60 @@ func (shardBestState *ShardBestState) updateShardBestState(blockchain *BlockChai
 		for _, beaconBlock := range beaconBlocks {
 			if beaconBlock.GetHeight() == NEWSTAKINGTX_HEIGHT_SWITCH {
 				replaceInThisBlock = true
-				//retore staking for this shardID
-				stakingInfo, err := rawdbv2.GetMapStakingTxNew(blockchain.GetDatabase())
+
+				//retore staking for this shardID by reading json file
+				type StakingInfo struct {
+					Height        uint64
+					StakingTxRoot map[int]string
+					StakingTx     map[int]map[string]string
+				}
+
+				var CloneStakingTx = func(s *StakingInfo, sid int) map[string]string {
+					res := make(map[string]string)
+					for k, v := range s.StakingTx[sid] {
+						res[k] = v
+					}
+					return res
+				}
+
+				stakingInfoResult := &StakingInfo{}
+
+				fd, err := os.OpenFile("stakingtx.json", os.O_RDONLY, 0600)
 				if err != nil {
-					Logger.log.Error("StakingTx is not ready")
-					return errors.New("StakingTx is not ready")
+					Logger.log.Error(err)
+					return errors.New("Cannot open stakingtx.json")
 				}
 
-				if stakingInfo.Height > NEWSTAKINGTX_HEIGHT_SWITCH {
-					Logger.log.Error("Stakingtx process must not be larger than", NEWSTAKINGTX_HEIGHT_SWITCH)
-					panic("ReplaceStakingTx fail")
+				b, err := ioutil.ReadAll(fd)
+				if err != nil {
+					Logger.log.Error(err)
+					return errors.New("Cannot read stakingtx.json")
 				}
 
-				if stakingInfo.Height < NEWSTAKINGTX_HEIGHT_SWITCH {
-					Logger.log.Error("Waiting! Stakingtx process not ready", stakingInfo.Height)
-					return errors.New("Stakingtx process not ready")
+				err = json.Unmarshal(b, stakingInfoResult)
+				if err != nil {
+					Logger.log.Error(err)
+					return errors.New("Unmarshal stakingtx.json")
 				}
 
-				//if ready, replace current shardbeststate stakingtx with the new stakingtx
-				Logger.log.Info("NEWTX: Replace stakingtx")
-				shardBestState.StakingTx = stakingInfo.CloneStakingTx(int(shardBestState.ShardID))
+				if stakingInfoResult.Height < 500000 {
+					Logger.log.Error(err)
+					return errors.New("Unepected height of stakingtx")
+				}
+
+				for sid, stakingMap := range stakingInfoResult.StakingTx {
+					hash, err := GenerateHashFromMapStringString(stakingMap)
+					if err != nil {
+						panic(err)
+					}
+					if stakingInfoResult.StakingTxRoot[sid] != hash.String() {
+						Logger.log.Error(err)
+						return errors.New("Unepected stakingtx root hash")
+					}
+				}
+
+				Logger.log.Infof("NEWTX: Replace stakingtx, shardID %v, root hash %v", int(shardBestState.ShardID), stakingInfoResult.StakingTxRoot[int(shardBestState.ShardID)])
+				shardBestState.StakingTx = CloneStakingTx(stakingInfoResult, int(shardBestState.ShardID))
 				break
 			}
 		}
@@ -703,7 +739,6 @@ func (shardBestState *ShardBestState) updateShardBestState(blockchain *BlockChai
 				}
 			}
 		}
-
 	}
 
 	if common.IndexOfUint64(shardBlock.Header.BeaconHeight/blockchain.config.ChainParams.Epoch, blockchain.config.ChainParams.EpochBreakPointSwapNewKey) > -1 {

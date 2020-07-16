@@ -16,20 +16,25 @@ func (httpServer *HttpServer) handleGetMapStakingTx(params interface{}, closeCha
 	if err != nil {
 		return nil, rpcservice.NewRPCError(500, err)
 	}
+
 	stakingInfoResult := struct {
 		Height        uint64
 		StakingTxRoot map[int]string
+		StakingTx     map[int]map[string]string
 	}{}
+
 	stakingInfoResult.Height = stakingInfo.Height
 	stakingInfoResult.StakingTxRoot = map[int]string{}
-
+	stakingInfoResult.StakingTx = map[int]map[string]string{}
 	for sid, stakingMap := range stakingInfo.MStakingTX {
 		hash, err := blockchain.GenerateHashFromMapStringString(stakingMap)
 		if err != nil {
 			panic(err)
 		}
 		stakingInfoResult.StakingTxRoot[sid] = hash.String()
+		stakingInfoResult.StakingTx[sid] = stakingMap
 	}
+
 	return stakingInfoResult, nil
 }
 
