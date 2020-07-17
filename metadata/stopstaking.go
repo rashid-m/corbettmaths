@@ -33,8 +33,8 @@ func NewStopAutoStakingMetadata(stopStakingType int, committeePublicKey string) 
 func (stopAutoStakingMetadata *StopAutoStakingMetadata) ValidateMetadataByItself() bool {
 
 	// TODO: temporary block this feature stop auto-staking
-	//Logger.log.Warnf("temporary block this feature stop auto-staking")
-	//return false
+	Logger.log.Warnf("temporary block this feature stop auto-staking")
+	return false
 
 	CommitteePublicKey := new(incognitokey.CommitteePublicKey)
 	if err := CommitteePublicKey.FromString(stopAutoStakingMetadata.CommitteePublicKey); err != nil {
