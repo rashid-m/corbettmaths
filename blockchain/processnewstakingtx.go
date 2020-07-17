@@ -18,7 +18,7 @@ import (
 	- replace process when updateshardbeststate
 */
 
-const NEWSTAKINGTX_HEIGHT_SWITCH = 1e9
+const NEWSTAKINGTX_HEIGHT_SWITCH = 559380
 
 func (blockchain *BlockChain) buildNewStakingTx() {
 	bDB := blockchain.GetDatabase()
