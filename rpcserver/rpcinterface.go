@@ -92,6 +92,7 @@ var HttpHandler = map[string]httpHandler{
 	getShardBestState:             (*HttpServer).handleGetShardBestState,
 	getShardBestStateDetail:       (*HttpServer).handleGetShardBestStateDetail,
 	getBeaconBestState:            (*HttpServer).handleGetBeaconBestState,
+	getMapStakingTx:               (*HttpServer).handleGetMapStakingTx,
 	getBeaconBestStateDetail:      (*HttpServer).handleGetBeaconBestStateDetail,
 	getBeaconPoolState:            (*HttpServer).handleGetBeaconPoolState,
 	getShardPoolState:             (*HttpServer).handleGetShardPoolState,

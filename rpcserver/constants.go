@@ -104,6 +104,7 @@ const (
 
 	getShardBestState        = "getshardbeststate"
 	getShardBestStateDetail  = "getshardbeststatedetail"
+	getMapStakingTx          = "getmapstakingtx"
 	getBeaconBestState       = "getbeaconbeststate"
 	getBeaconBestStateDetail = "getbeaconbeststatedetail"
 

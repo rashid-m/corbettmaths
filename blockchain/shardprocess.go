@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/incognitochain/incognito-chain/dataaccessobject/rawdbv2"
 	"github.com/incognitochain/incognito-chain/dataaccessobject/statedb"
+	"io/ioutil"
+	"os"
 	"reflect"
 	"sort"
 	"strconv"
@@ -653,6 +655,92 @@ func (shardBestState *ShardBestState) updateShardBestState(blockchain *BlockChai
 	for stakePublicKey, txHash := range stakingTx {
 		shardBestState.StakingTx[stakePublicKey] = txHash
 	}
+
+	//hot fix, update shard staking tx
+	if len(beaconBlocks) > 0 {
+		replaceInThisBlock := false
+
+		//incase, replace in this shard block (confirm beacon block with height NEWSTAKINGTX_HEIGHT_SWITCH)
+		for _, beaconBlock := range beaconBlocks {
+			if beaconBlock.GetHeight() == NEWSTAKINGTX_HEIGHT_SWITCH {
+				replaceInThisBlock = true
+
+				//retore staking for this shardID by reading json file
+				type StakingInfo struct {
+					Height        uint64
+					StakingTxRoot map[int]string
+					StakingTx     map[int]map[string]string
+				}
+
+				var CloneStakingTx = func(s *StakingInfo, sid int) map[string]string {
+					res := make(map[string]string)
+					for k, v := range s.StakingTx[sid] {
+						res[k] = v
+					}
+					return res
+				}
+
+				stakingInfoResult := &StakingInfo{}
+
+				fd, err := os.OpenFile("stakingtx.json", os.O_RDONLY, 0600)
+				if err != nil {
+					Logger.log.Error(err)
+					return errors.New("Cannot open stakingtx.json")
+				}
+
+				b, err := ioutil.ReadAll(fd)
+				if err != nil {
+					Logger.log.Error(err)
+					return errors.New("Cannot read stakingtx.json")
+				}
+
+				err = json.Unmarshal(b, stakingInfoResult)
+				if err != nil {
+					Logger.log.Error(err)
+					return errors.New("Unmarshal stakingtx.json")
+				}
+
+				if stakingInfoResult.Height < 500000 {
+					Logger.log.Error(err)
+					return errors.New("Unepected height of stakingtx")
+				}
+
+				for sid, stakingMap := range stakingInfoResult.StakingTx {
+					hash, err := GenerateHashFromMapStringString(stakingMap)
+					if err != nil {
+						panic(err)
+					}
+					if stakingInfoResult.StakingTxRoot[sid] != hash.String() {
+						Logger.log.Error(err)
+						return errors.New("Unepected stakingtx root hash")
+					}
+				}
+
+				Logger.log.Infof("NEWTX: Replace stakingtx, shardID %v, root hash %v", int(shardBestState.ShardID), stakingInfoResult.StakingTxRoot[int(shardBestState.ShardID)])
+				shardBestState.StakingTx = CloneStakingTx(stakingInfoResult, int(shardBestState.ShardID))
+				break
+			}
+		}
+
+		//incase, after the replacement
+		if !replaceInThisBlock && beaconBlocks[0].GetHeight() > NEWSTAKINGTX_HEIGHT_SWITCH {
+			for _, beaconBlock := range beaconBlocks {
+				for _, l := range beaconBlock.Body.Instructions {
+					// Process Swap Instruction, and delete stakingtx if we get return
+					if l[0] == SwapAction {
+						for _, outPublicKey := range strings.Split(l[2], ",") {
+							if txId, ok := shardBestState.StakingTx[outPublicKey]; ok {
+								if checkReturnStakingTxExistence(txId, shardBlock) {
+									delete(shardBestState.StakingTx, outPublicKey)
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	if common.IndexOfUint64(shardBlock.Header.BeaconHeight/blockchain.config.ChainParams.Epoch, blockchain.config.ChainParams.EpochBreakPointSwapNewKey) > -1 {
 		err = shardBestState.processShardBlockInstructionForKeyListV2(blockchain, shardBlock, committeeChange)
 	} else {
@@ -776,13 +864,14 @@ func (shardBestState *ShardBestState) processShardBlockInstruction(blockchain *B
 			if len(l[2]) != 0 && l[2] != "" {
 				swapedCommittees = strings.Split(l[2], ",")
 			}
-			for _, v := range swapedCommittees {
-				if txId, ok := shardBestState.StakingTx[v]; ok {
-					if checkReturnStakingTxExistence(txId, shardBlock) {
-						delete(GetBestStateShard(shardBestState.ShardID).StakingTx, v)
-					}
-				}
-			}
+			//this code never run( checkReturnStakingTxExistence always false)
+			//for _, v := range swapedCommittees {
+			//	if txId, ok := shardBestState.StakingTx[v]; ok {
+			//		if checkReturnStakingTxExistence(txId, shardBlock) {
+			//			delete(GetBestStateShard(shardBestState.ShardID).StakingTx, v)
+			//		}
+			//	}
+			//}
 			if !reflect.DeepEqual(swapedCommittees, shardSwappedCommittees) {
 				return NewBlockChainError(SwapValidatorError, fmt.Errorf("Expect swapped committees to be %+v but get %+v", swapedCommittees, shardSwappedCommittees))
 			}
@@ -907,9 +996,11 @@ func (shardBestState *ShardBestState) verifyPostProcessingShardBlock(shardBlock 
 	if hash, isOk := verifyHashFromStringArray(shardPendingValidatorStr, shardBlock.Header.PendingValidatorRoot); !isOk {
 		return NewBlockChainError(ShardPendingValidatorRootHashError, fmt.Errorf("Expect shard pending validator root hash to be %+v but get %+v", shardBlock.Header.PendingValidatorRoot, hash))
 	}
+
 	if hash, isOk := verifyHashFromMapStringString(shardBestState.StakingTx, shardBlock.Header.StakingTxRoot); !isOk {
-		return NewBlockChainError(ShardPendingValidatorRootHashError, fmt.Errorf("Expect shard staking root hash to be %+v but get %+v", shardBlock.Header.StakingTxRoot, hash))
+		return NewBlockChainError(ShardPendingValidatorRootHashError, fmt.Errorf("Expect shard %v staking root hash to be %+v but get %+v", shardID, shardBlock.Header.StakingTxRoot, hash))
 	}
+
 	Logger.log.Debugf("SHARD %+v | Finish VerifyPostProcessing Block with height %+v at hash %+v", shardBlock.Header.ShardID, shardBlock.Header.Height, shardBlock.Hash())
 	return nil
 }
