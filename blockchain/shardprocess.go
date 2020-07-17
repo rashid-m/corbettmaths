@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/incognitochain/incognito-chain/dataaccessobject/rawdbv2"
-	"github.com/incognitochain/incognito-chain/dataaccessobject/statedb"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/incognitochain/incognito-chain/dataaccessobject/rawdbv2"
+	"github.com/incognitochain/incognito-chain/dataaccessobject/statedb"
 
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/incdb"
@@ -968,8 +969,12 @@ func (shardBestState *ShardBestState) processShardBlockInstructionForKeyListV2(b
 			shardCommitteesStruct := append(inPublicKeyStructs, remainedShardCommittees...)
 			shardBestState.ShardPendingValidator = shardPendingValidatorStruct
 			shardBestState.ShardCommittee = shardCommitteesStruct
-			committeeChange.shardCommitteeAdded[shardID] = inPublicKeyStructs
-			committeeChange.shardCommitteeRemoved[shardID] = outPublicKeyStructs
+			// committeeChange.shardCommitteeAdded[shardID] = inPublicKeyStructs
+			// committeeChange.shardCommitteeRemoved[shardID] = outPublicKeyStructs
+			committeeReplace := [2][]incognitokey.CommitteePublicKey{}
+			committeeReplace[common.REPLACE_IN] = append(committeeChange.shardCommitteeAdded[shardID], inPublicKeyStructs...)
+			committeeReplace[common.REPLACE_OUT] = append(committeeChange.shardCommitteeAdded[shardID], outPublicKeyStructs...)
+			committeeChange.shardCommitteeReplaced[shardID] = committeeReplace
 		}
 	}
 	return nil
@@ -1159,6 +1164,10 @@ func (blockchain *BlockChain) processStoreShardBlock(shardBlock *ShardBlock, com
 		if err != nil {
 			return NewBlockChainError(StoreShardBlockError, err)
 		}
+	}
+	err = statedb.ReplaceOneShardCommittee(tempShardBestState.consensusStateDB, shardID, committeeChange.shardCommitteeReplaced[shardID], rewardReceiver, autoStaking)
+	if err != nil {
+		return NewBlockChainError(StoreShardBlockError, err)
 	}
 	err = statedb.DeleteOneShardCommittee(tempShardBestState.consensusStateDB, shardID, committeeChange.shardCommitteeAdded[shardID])
 	if err != nil {
