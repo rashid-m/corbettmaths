@@ -161,7 +161,7 @@ func ReplaceOneShardCommittee(stateDB *StateDB, shardID byte, shardCommittee [2]
 	newEnterTime := GetOneShardCommitteeEnterTime(stateDB, shardID)
 	err := storeCommittee(stateDB, int(shardID), CurrentValidator, shardCommittee[common.REPLACE_IN], rewardReceiver, autoStaking, newEnterTime)
 	if err != nil {
-		return NewStatedbError(StoreAllShardCommitteeError, err)
+		return NewStatedbError(StoreShardCommitteeError, err)
 	}
 	err = deleteCommittee(stateDB, int(shardID), CurrentValidator, shardCommittee[common.REPLACE_OUT])
 	if err != nil {
