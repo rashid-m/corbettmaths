@@ -661,6 +661,7 @@ func (shardBestState *ShardBestState) updateShardBestState(blockchain *BlockChai
 		replaceInThisBlock := false
 
 		//incase, replace in this shard block (confirm beacon block with height NEWSTAKINGTX_HEIGHT_SWITCH)
+		NEWSTAKINGTX_HEIGHT_SWITCH := blockchain.config.ChainParams.NewStakingTxBeaconHeighSwitch
 		for _, beaconBlock := range beaconBlocks {
 			if beaconBlock.GetHeight() == NEWSTAKINGTX_HEIGHT_SWITCH {
 				replaceInThisBlock = true
