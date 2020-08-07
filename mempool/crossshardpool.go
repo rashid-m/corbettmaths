@@ -67,12 +67,12 @@ func InitCrossShardPool(pool map[byte]blockchain.CrossShardPool, db incdb.Databa
 		pool[byte(i)] = crossShardPoolMap[byte(i)]
 		crossShardPoolMap[byte(i)].db = db
 		crossShardPoolMap[byte(i)].bc = bc
-		go func() {
+		go func(pool blockchain.CrossShardPool) {
 			for {
 				time.Sleep(time.Minute)
-				//pool[byte(i)].UpdatePool()
+				pool.UpdatePool()
 			}
-		}()
+		}(pool[byte(i)])
 	}
 }
 
