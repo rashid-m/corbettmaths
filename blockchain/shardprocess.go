@@ -449,10 +449,10 @@ func (blockchain *BlockChain) verifyPreProcessingShardBlockForSigning(curView *S
 	startTimeVerifyPreProcessingShardBlockForSigning := time.Now()
 	// Verify Transaction
 	//get beacon height from shard block
-	beaconHeight := shardBlock.Header.BeaconHeight
-	if err := blockchain.verifyTransactionFromNewBlock(shardID, shardBlock.Body.Transactions, int64(beaconHeight), curView); err != nil {
-		return NewBlockChainError(TransactionFromNewBlockError, err)
-	}
+	//beaconHeight := shardBlock.Header.BeaconHeight
+	//if err := blockchain.verifyTransactionFromNewBlock(shardID, shardBlock.Body.Transactions, int64(beaconHeight), curView); err != nil {
+	//	return NewBlockChainError(TransactionFromNewBlockError, err)
+	//}
 	// Verify Instruction
 	instructions := [][]string{}
 	shardCommittee, err := incognitokey.CommitteeKeyListToString(curView.ShardCommittee)
