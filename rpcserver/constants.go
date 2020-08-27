@@ -140,6 +140,7 @@ const (
 	createAndSendIssuingRequest      = "createandsendissuingrequest"
 	createAndSendContractingRequest  = "createandsendcontractingrequest"
 	createAndSendBurningRequest      = "createandsendburningrequest"
+	createAndSendBurningRequestTemp  = "createandsendburningrequesttemp"
 	createAndSendTxWithIssuingETHReq = "createandsendtxwithissuingethreq"
 	checkETHHashIssued               = "checkethhashissued"
 	getAllBridgeTokens               = "getallbridgetokens"
@@ -246,8 +247,9 @@ const (
 	getLatestBNBHeaderBlockHeight        = "getlatestbnbheaderblockheight"
 
 	// incognito mode for sc
-	getBurnProofForDepositToSC                = "getburnprooffordeposittosc"
-	createAndSendBurningForDepositToSCRequest = "createandsendburningfordeposittoscrequest"
+	getBurnProofForDepositToSC                    = "getburnprooffordeposittosc"
+	createAndSendBurningForDepositToSCRequest     = "createandsendburningfordeposittoscrequest"
+	createAndSendBurningForDepositToSCRequestTemp = "createandsendburningfordeposittoscrequesttemp"
 
 	getBeaconPoolInfo        = "getbeaconpoolinfo"
 	getShardToBeaconPoolInfo = "getshardtobeaconpoolinfo"

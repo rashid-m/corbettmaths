@@ -132,6 +132,7 @@ var HttpHandler = map[string]httpHandler{
 	getStackingAmount:                (*HttpServer).handleGetStakingAmount,
 	hashToIdenticon:                  (*HttpServer).handleHashToIdenticon,
 	createAndSendBurningRequest:      (*HttpServer).handleCreateAndSendBurningRequest,
+	createAndSendBurningRequestTemp:  (*HttpServer).handleCreateAndSendBurningRequestTemp,
 	createAndSendTxWithIssuingETHReq: (*HttpServer).handleCreateAndSendTxWithIssuingETHReq,
 
 	// Incognito -> Ethereum bridge
@@ -228,8 +229,9 @@ var HttpHandler = map[string]httpHandler{
 	getLatestBNBHeaderBlockHeight:        (*HttpServer).handleGetLatestBNBHeaderBlockHeight,
 
 	// incognnito mode for sc
-	getBurnProofForDepositToSC:                (*HttpServer).handleGetBurnProofForDepositToSC,
-	createAndSendBurningForDepositToSCRequest: (*HttpServer).handleCreateAndSendBurningForDepositToSCRequest,
+	getBurnProofForDepositToSC:                    (*HttpServer).handleGetBurnProofForDepositToSC,
+	createAndSendBurningForDepositToSCRequest:     (*HttpServer).handleCreateAndSendBurningForDepositToSCRequest,
+	createAndSendBurningForDepositToSCRequestTemp: (*HttpServer).handleCreateAndSendBurningForDepositToSCRequestTemp,
 
 	//new pool info
 	getBeaconPoolInfo:        (*HttpServer).hanldeGetBeaconPoolInfo,

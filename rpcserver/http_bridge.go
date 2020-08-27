@@ -139,6 +139,34 @@ func (httpServer *HttpServer) handleCreateAndSendBurningRequest(params interface
 	return sendResult, nil
 }
 
+func (httpServer *HttpServer) handleCreateRawTxWithBurningReqTemp(params interface{}, closeChan <-chan struct{}) (interface{}, *rpcservice.RPCError) {
+	return processBurningReq(
+		metadata.BurningRequestMeta,
+		params,
+		closeChan,
+		httpServer,
+	)
+}
+
+func (httpServer *HttpServer) handleCreateAndSendBurningRequestTemp(params interface{}, closeChan <-chan struct{}) (interface{}, *rpcservice.RPCError) {
+	data, err := httpServer.handleCreateRawTxWithBurningReqTemp(params, closeChan)
+	if err != nil {
+		return nil, rpcservice.NewRPCError(rpcservice.UnexpectedError, err)
+	}
+
+	tx := data.(jsonresult.CreateTransactionResult)
+	base58CheckData := tx.Base58CheckData
+	newParam := make([]interface{}, 0)
+	newParam = append(newParam, base58CheckData)
+	// sendResult, err1 := httpServer.handleSendRawCustomTokenTransaction(newParam, closeChan)
+	sendResult, err1 := httpServer.handleSendRawPrivacyCustomTokenTransaction(newParam, closeChan)
+	if err1 != nil {
+		return nil, rpcservice.NewRPCError(rpcservice.UnexpectedError, err1)
+	}
+
+	return sendResult, nil
+}
+
 func (httpServer *HttpServer) handleCreateRawTxWithIssuingETHReq(params interface{}, closeChan <-chan struct{}) (interface{}, *rpcservice.RPCError) {
 	arrayParams := common.InterfaceSlice(params)
 	if arrayParams == nil || len(arrayParams) < 5 {
@@ -334,6 +362,31 @@ func (httpServer *HttpServer) handleCreateRawTxWithBurningForDepositToSCReq(para
 
 func (httpServer *HttpServer) handleCreateAndSendBurningForDepositToSCRequest(params interface{}, closeChan <-chan struct{}) (interface{}, *rpcservice.RPCError) {
 	data, err := httpServer.handleCreateRawTxWithBurningForDepositToSCReq(params, closeChan)
+	if err != nil {
+		return nil, rpcservice.NewRPCError(rpcservice.UnexpectedError, err)
+	}
+	tx := data.(jsonresult.CreateTransactionResult)
+	base58CheckData := tx.Base58CheckData
+	newParam := make([]interface{}, 0)
+	newParam = append(newParam, base58CheckData)
+	sendResult, err1 := httpServer.handleSendRawPrivacyCustomTokenTransaction(newParam, closeChan)
+	if err1 != nil {
+		return nil, rpcservice.NewRPCError(rpcservice.UnexpectedError, err1)
+	}
+	return sendResult, nil
+}
+
+func (httpServer *HttpServer) handleCreateRawTxWithBurningForDepositToSCReqTemp(params interface{}, closeChan <-chan struct{}) (interface{}, *rpcservice.RPCError) {
+	return processBurningReq(
+		metadata.BurningForDepositToSCRequestMeta,
+		params,
+		closeChan,
+		httpServer,
+	)
+}
+
+func (httpServer *HttpServer) handleCreateAndSendBurningForDepositToSCRequestTemp(params interface{}, closeChan <-chan struct{}) (interface{}, *rpcservice.RPCError) {
+	data, err := httpServer.handleCreateRawTxWithBurningForDepositToSCReqTemp(params, closeChan)
 	if err != nil {
 		return nil, rpcservice.NewRPCError(rpcservice.UnexpectedError, err)
 	}
