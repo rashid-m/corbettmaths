@@ -92,7 +92,7 @@ func (blockchain *BlockChain) InsertBeaconBlock(beaconBlock *BeaconBlock, should
 	preHash := beaconBlock.Header.PreviousBlockHash
 	Logger.log.Infof("BEACON | InsertBeaconBlock  %+v with hash %+v \nPrev hash:", beaconBlock.Header.Height, blockHash, preHash)
 
-	skipBlock := true
+	skipBlock := false
 	if skipBlock {
 		for _, inst := range beaconBlock.Body.Instructions {
 			if inst[0] == strconv.Itoa(metadata.BurningConfirmMetaV2) {
