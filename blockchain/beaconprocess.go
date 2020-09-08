@@ -91,6 +91,17 @@ func (blockchain *BlockChain) InsertBeaconBlock(beaconBlock *BeaconBlock, should
 	blockHash := beaconBlock.Hash().String()
 	preHash := beaconBlock.Header.PreviousBlockHash
 	Logger.log.Infof("BEACON | InsertBeaconBlock  %+v with hash %+v \nPrev hash:", beaconBlock.Header.Height, blockHash, preHash)
+
+	skipBlock := true
+	if skipBlock {
+		for _, inst := range beaconBlock.Body.Instructions {
+			if inst[0] == strconv.Itoa(metadata.BurningConfirmMetaV2) {
+				Logger.log.Infof("found block %d, skipping insert with meta: %+v", beaconBlock.Header.Height, inst)
+				return fmt.Errorf("sorry, but no")
+			}
+		}
+	}
+
 	// if beaconBlock.GetHeight() == 2 {
 	// 	bcTmp = 0
 	// 	bcStart = time.Now()

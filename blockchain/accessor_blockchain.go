@@ -97,7 +97,7 @@ func (blockchain *BlockChain) GetBeaconBlockByHeight(height uint64) ([]*BeaconBl
 }
 
 func (blockchain *BlockChain) GetBeaconBlockByView(view multiview.View, height uint64) (*BeaconBlock, error) {
-	blkhash, err := blockchain.GetBeaconBlockHashByView(blockchain.BeaconChain.GetFinalView(), height)
+	blkhash, err := blockchain.GetBeaconBlockHashByView(blockchain.BeaconChain.GetBestView(), height)
 	if err != nil {
 		return nil, err
 	}
