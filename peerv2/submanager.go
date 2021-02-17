@@ -126,6 +126,12 @@ func (sub *SubManager) Subscribe(forced bool) error {
 		validator := sub.consensusData.GetOneValidator()
 		if validator != nil {
 			nodePK = validator.MiningKey.GetPublicKeyBase58()
+		} else {
+			validator = &consensus.Validator{
+				State: consensus.MiningState{
+					Index: 0,
+				},
+			}
 		}
 		newTopics, _, err = sub.registerToProxy(
 			nodePK,
