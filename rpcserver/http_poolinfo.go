@@ -151,6 +151,7 @@ func (httpServer *HttpServer) hanldeGetAllViewDetail(params interface{}, closeCh
 			PreviousBlockHash: view.GetPreviousHash().String(),
 			Height:            view.GetHeight(),
 			Round:             uint64(view.GetBlock().GetRound()),
+			Timeslot:          view.GetBlock().GetProduceTime(),
 		})
 	}
 	return res, nil

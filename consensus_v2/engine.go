@@ -103,17 +103,17 @@ func (s *Engine) WatchCommitteeChange() {
 	for _, validator := range s.validators {
 		s.userMiningPublicKeys = validator.MiningKey.GetPublicKey()
 		s.userKeyListString = validator.PrivateSeed
-		role, chainID := s.config.Node.GetPubkeyMiningState(validator.MiningKey.GetPublicKey())
+		role, chainID, idx := s.config.Node.GetPubkeyMiningStateDetail(validator.MiningKey.GetPublicKey())
 		//Logger.Log.Info(validator.miningKey.GetPublicKey().GetMiningKeyBase58(common.BlsConsensus))
 		if chainID == -1 {
-			validator.State = consensus.MiningState{role, "beacon", -1}
+			validator.State = consensus.MiningState{role, "beacon", -1, idx}
 		} else if chainID > -1 {
-			validator.State = consensus.MiningState{role, "shard", chainID}
+			validator.State = consensus.MiningState{role, "shard", chainID, idx}
 		} else {
 			if role != "" {
-				validator.State = consensus.MiningState{role, "shard", -2}
+				validator.State = consensus.MiningState{role, "shard", -2, idx}
 			} else {
-				validator.State = consensus.MiningState{role, "", -2}
+				validator.State = consensus.MiningState{role, "", -2, idx}
 			}
 		}
 

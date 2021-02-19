@@ -557,6 +557,13 @@ func (e *BLSBFT_V2) SendVote(userKey *signatureschemes2.MiningKey, block types.B
 	if err != nil {
 		e.Logger.Error(err)
 		return NewConsensusError(UnExpectedError, err)
+		// 	v.isValid = true
+		// 	e.voteHistory[v.block.GetHeight()] = v.block
+
+		// 	v.sendVote = true
+		// 	go e.ProcessBFTMsg(msg.(*wire.MessageBFT))
+		// 	go e.Node.PushMessageToChain(msg, e.Chain)
+		// }
 	}
 
 	msg, err := MakeBFTVoteMsg(Vote, e.ChainKey, e.currentTimeSlot, block.GetHeight())
@@ -565,6 +572,13 @@ func (e *BLSBFT_V2) SendVote(userKey *signatureschemes2.MiningKey, block types.B
 		return NewConsensusError(UnExpectedError, err)
 	}
 	e.voteHistory[block.GetHeight()] = block
+	x := msg.(*wire.MessageBFT)
+	var xVote BFTVote
+	err = json.Unmarshal(x.Content, &xVote)
+	if err != nil {
+		e.Logger.Error(err)
+	}
+	e.Logger.Infof("sending vote for block %v %v...", Vote.BlockHash, xVote.BlockHash)
 	e.Logger.Info(e.ChainKey, "sending vote...")
 	go e.Node.PushMessageToChain(msg, e.Chain)
 	return nil
@@ -643,10 +657,11 @@ func (e *BLSBFT_V2) proposeBlock(userMiningKey signatureschemes2.MiningKey, prop
 	blockData, _ := json.Marshal(block)
 	var proposeCtn = new(BFTPropose)
 	proposeCtn.Block = blockData
-	proposeCtn.PeerID = e.Node.GetSelfPeerID().String()
+	pKey := userMiningKey.GetPublicKey()
+	proposeCtn.PeerID = pKey.GetMiningKeyBase58("bls")
 	msg, _ := MakeBFTProposeMsg(proposeCtn, e.ChainKey, e.currentTimeSlot, block.GetHeight())
-
-	//push propose message to highway, and wait for highway send it back => only vote when connect to highway
+	e.Logger.Infof("[debugbft] BFT msg pubkey %v", msg.(*wire.MessageBFT).PeerID)
+	// go e.ProcessBFTMsg(msg.(*wire.MessageBFT))
 	go e.Node.PushMessageToChain(msg, e.Chain)
 
 	return block, nil

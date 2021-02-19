@@ -48,6 +48,16 @@ func (s *Engine) GetUserRole() (string, string, int) {
 	return layer, s.curringMiningState.role, s.curringMiningState.chainID
 }
 
+func (s *Engine) GetUserRoleDetail() (string, string, int, int32) {
+	layer := s.curringMiningState.layer
+	_, _, idx := s.config.Node.GetUserMiningStateDetail()
+	if s.curringMiningState.role == common.WaitingRole {
+		layer = "shard"
+	}
+	// s.ValidateProducerPosition(blk common.BlockInterface, lastProposerIdx int, committee []incognitokey.CommitteePublicKey, minCommitteeSize int)
+	return layer, s.curringMiningState.role, s.curringMiningState.chainID, idx
+}
+
 func (engine *Engine) IsOngoing(chainName string) bool {
 	if engine.currentMiningProcess == nil {
 		return false
