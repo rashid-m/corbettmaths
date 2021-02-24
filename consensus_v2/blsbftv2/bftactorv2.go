@@ -572,7 +572,7 @@ func (e *BLSBFT_V2) proposeBlock(userMiningKey signatureschemes2.MiningKey, prop
 	proposeCtn.PeerID = pKey.GetMiningKeyBase58("bls")
 	msg, _ := MakeBFTProposeMsg(proposeCtn, e.ChainKey, e.currentTimeSlot, block.GetHeight())
 	e.Logger.Infof("[debugbft] BFT msg pubkey %v", msg.(*wire.MessageBFT).PeerID)
-	go e.ProcessBFTMsg(msg.(*wire.MessageBFT))
+	// go e.ProcessBFTMsg(msg.(*wire.MessageBFT))
 	go e.Node.PushMessageToChain(msg, e.Chain)
 
 	return block, nil
