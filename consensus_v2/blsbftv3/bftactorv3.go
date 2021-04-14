@@ -695,9 +695,12 @@ func (e *BLSBFT_V3) proposeBlock(
 
 	var proposeCtn = new(BFTPropose)
 	proposeCtn.Block = blockData
-	proposeCtn.PeerID = e.Node.GetSelfPeerID().String()
+	// proposeCtn.PeerID = e.Node.GetSelfPeerID().String()
+	pKey := userMiningKey.GetPublicKey()
+	proposeCtn.PeerID = pKey.GetMiningKeyBase58("bls")
 	msg, _ := MakeBFTProposeMsg(proposeCtn, e.ChainKey, e.currentTimeSlot, block.GetHeight())
-	go e.ProcessBFTMsg(msg.(*wire.MessageBFT))
+	e.Logger.Infof("[debugbft] BFT msg pubkey %v", msg.(*wire.MessageBFT).PeerID)
+	// go e.ProcessBFTMsg(msg.(*wire.MessageBFT))
 	go e.Node.PushMessageToChain(msg, e.Chain)
 
 	return block, nil
