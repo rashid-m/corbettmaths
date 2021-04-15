@@ -2045,7 +2045,7 @@ func (s *Server) GetPubkeyMiningStateDetail(userPk *incognitokey.CommitteePublic
 			return common.CommitteeRole, -1, int32(i)
 		}
 	}
-	for _, v := range s.blockChain.BeaconChain.GetPendingCommittee() {
+	for i, v := range s.blockChain.BeaconChain.GetPendingCommittee() {
 		if v.IsEqualMiningPubKey(common.BlsConsensus, userPk) {
 			return common.PendingRole, -1, int32(i)
 		}
