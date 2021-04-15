@@ -330,9 +330,9 @@ func (e *BLSBFT_V3) run() error {
 					}
 
 					// check if propose block in within TS
-					if common.CalculateTimeSlot(proposeBlockInfo.block.GetProposeTime()) != e.currentTimeSlot {
-						continue
-					}
+					// if common.CalculateTimeSlot(proposeBlockInfo.block.GetProposeTime()) != e.currentTimeSlot {
+					// 	continue
+					// }
 
 					validProposeBlock = append(validProposeBlock, proposeBlockInfo)
 
