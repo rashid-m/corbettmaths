@@ -189,7 +189,7 @@ func (e *BLSBFT_V3) Start() error {
 					}
 					proposerPk = e.CommitteeChain.ProposerByTimeSlot(byte(e.ChainID), e.currentTimeSlot, committees)
 				} else {
-					proposerPk = bestView.GetProposerByTimeSlot(e.currentTimeSlot, 2)
+					proposerPk, _ = bestView.GetProposerByTimeSlot(e.currentTimeSlot, 2)
 					committees = e.Chain.GetBestView().GetCommittee()
 				}
 
@@ -581,7 +581,7 @@ func (e *BLSBFT_V3) proposeBeaconBlock(
 	var err error
 	if block == nil {
 		ctx := context.Background()
-		ctx, cancel := context.WithTimeout(ctx, common.TIMESLOT/2)
+		ctx, cancel := context.WithTimeout(ctx, (time.Duration(common.TIMESLOT)*time.Second)/2)
 		defer cancel()
 		e.Logger.Info("CreateNewBlock")
 		block, err = e.Chain.CreateNewBlock(2, b58Str, 1, e.currentTime, committees, committeeViewHash)
@@ -621,7 +621,7 @@ func (e *BLSBFT_V3) proposeShardBlock(
 	if block == nil ||
 		(block != nil && !reflect.DeepEqual(committeesFromBeaconHash, committees)) {
 		ctx := context.Background()
-		ctx, cancel := context.WithTimeout(ctx, common.TIMESLOT/2)
+		ctx, cancel := context.WithTimeout(ctx, (time.Duration(common.TIMESLOT)*time.Second)/2)
 		defer cancel()
 		e.Logger.Info("CreateNewBlock")
 		block, err = e.Chain.CreateNewBlock(2, b58Str, 1, e.currentTime, committees, committeeViewHash)
